@@ -1,0 +1,2104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhoneMail - Asynchronous Email Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    @media print {
+      body * { visibility: hidden !important; }
+      #printable-receipt-card, #printable-receipt-card * { visibility: visible !important; }
+      #printable-receipt-card { position: fixed !important; left: 0 !important; top: 0 !important; width: 100% !important; margin: 0 !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+    }
+  </style>
+</head>
+<body class="bg-[#eef1f5] text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+
+
+
+  <!-- Responsive Tools & View Bottom Sheet (Mobile / Tablet drawer) -->
+  <div id="tools-bottom-sheet-backdrop" onclick="toggleToolsDrawer(false)" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+  <div id="tools-bottom-sheet" class="fixed bottom-0 inset-x-0 z-50 bg-[#131722] border-t border-slate-700/80 rounded-t-3xl shadow-2xl p-5 text-white max-h-[85vh] overflow-y-auto hidden animate-slide-up">
+    <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+        <h3 class="font-bold text-sm text-white">PhoneMail Tools &amp; Viewport</h3>
+      </div>
+      <button onclick="toggleToolsDrawer(false)" class="text-slate-400 hover:text-white p-1">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- View Mode Segmented Control -->
+    <div class="mt-4 space-y-1.5">
+      <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Layout Viewport Mode</label>
+      <div class="grid grid-cols-3 gap-1.5 bg-slate-900/90 p-1 rounded-2xl border border-slate-800 text-xs">
+        <button type="button" data-view-mode="auto" class="py-2 rounded-xl font-bold bg-blue-600 text-white shadow-sm transition-all text-center">Auto (768px)</button>
+        <button type="button" data-view-mode="desktop" class="py-2 rounded-xl font-medium text-slate-400 hover:text-white transition-all text-center">Desktop</button>
+        <button type="button" data-view-mode="mobile" class="py-2 rounded-xl font-medium text-slate-400 hover:text-white transition-all text-center">Mobile</button>
+      </div>
+    </div>
+
+    <!-- Quick Switch Account -->
+    <div class="mt-4 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Quick Profile Switcher</label>
+        <button type="button" onclick="openAuthModal(); toggleToolsDrawer(false);" class="text-[11px] text-blue-400 hover:text-blue-300 font-medium">Auth Gateway →</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <button type="button" onclick="quickSwitchUser('+19876543210'); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-emerald-950/50 border border-slate-800 hover:border-emerald-500/50 text-left transition-all">
+          <div class="text-emerald-400 font-bold flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Citizen Portal</span>
+          </div>
+          <div class="text-[11px] text-slate-400 font-mono mt-0.5">+1 (987) 654-3210</div>
+        </button>
+        <button type="button" onclick="quickSwitchUser('+18005550199'); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-blue-950/50 border border-slate-800 hover:border-blue-500/50 text-left transition-all">
+          <div class="text-blue-400 font-bold flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M4 22V11M20 22V11M10 22V11M14 22V11M2 11l10-7 10 7M12 2v2"/></svg>
+            <span>Civic Services Dept</span>
+          </div>
+          <div class="text-[11px] text-slate-400 font-mono mt-0.5">+1 (800) 555-0199</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Telephony & Citizen Tools Grid -->
+    <div class="mt-4 space-y-1.5">
+      <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Telephony &amp; Verification Tools</label>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+        <button type="button" onclick="openIvrHelplineModal(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-indigo-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-indigo-600/30 text-indigo-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div class="font-bold text-indigo-300">Voice Helpline</div>
+          <div class="text-[10px] text-slate-400">Non-Smart IVR</div>
+        </button>
+        <button type="button" onclick="openSmsBridgeModal(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-teal-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-teal-600/30 text-teal-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+          </div>
+          <div class="font-bold text-teal-300">SMS Bridge</div>
+          <div class="text-[10px] text-slate-400">Keypad Reply</div>
+        </button>
+        <button type="button" onclick="openRobocallModal(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-rose-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-rose-600/30 text-rose-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </div>
+          <div class="font-bold text-rose-300">Robocall SOS</div>
+          <div class="text-[10px] text-slate-400">DTMF Blast</div>
+        </button>
+        <button type="button" onclick="openQrVerifyModal(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-emerald-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-emerald-600/30 text-emerald-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/></svg>
+          </div>
+          <div class="font-bold text-emerald-300">Verify QR Seal</div>
+          <div class="text-[10px] text-slate-400">SHA256 Ledger</div>
+        </button>
+        <button type="button" onclick="openBroadcastModal(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-amber-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-amber-600/30 text-amber-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18h10"/><path d="M12 2v1"/><path d="M12 6a6 6 0 0 0-6 6v6h12v-6a6 6 0 0 0-6-6Z"/></svg>
+          </div>
+          <div class="font-bold text-amber-300">Broadcast</div>
+          <div class="text-[10px] text-slate-400">Disaster Alert</div>
+        </button>
+        <button type="button" onclick="cycleTheme(); toggleToolsDrawer(false);" class="p-3 rounded-2xl bg-slate-900 hover:bg-purple-950/60 border border-slate-800 text-left transition-all">
+          <div class="w-6 h-6 rounded-lg bg-purple-600/30 text-purple-400 flex items-center justify-center mb-1">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+          </div>
+          <div class="font-bold text-purple-300">Change Theme</div>
+          <div class="text-[10px] text-slate-400">3 Themes</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency Disaster / Civic Broadcast Banner (Hidden by default, slides down on emergency) -->
+  <div id="civic-broadcast-banner" class="bg-gradient-to-r from-amber-600 via-rose-600 to-amber-700 text-white px-6 py-2.5 shadow-xl flex items-center justify-between z-40 hidden animate-pulse">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18h10"/><path d="M12 2v1"/><path d="M12 6a6 6 0 0 0-6 6v6h12v-6a6 6 0 0 0-6-6Z"/></svg>
+      </div>
+      <div>
+        <div class="text-[11px] uppercase tracking-wider font-extrabold flex items-center gap-2">
+          <span>CIVIC EMERGENCY BROADCAST</span>
+          <span class="bg-white/20 text-white text-[9px] px-2 py-0.2 rounded-full font-mono font-bold">ALL CITIZENS</span>
+        </div>
+        <div id="broadcast-headline" class="text-xs font-bold mt-0.5">Alert Issued</div>
+        <div id="broadcast-details" class="text-[11px] text-white/90">Details</div>
+      </div>
+    </div>
+    <button onclick="dismissBroadcastBanner()" class="px-2.5 py-1 rounded bg-black/30 hover:bg-black/40 text-[11px] font-semibold text-white">
+      Dismiss
+    </button>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="notification-toast" class="fixed bottom-6 right-6 z-50 bg-[#131722] text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs font-medium opacity-0 pointer-events-none -translate-y-4 transition-all duration-300">
+    Notification
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 1. DESKTOP VIEW (FULL-BLEED GMAIL 3-COLUMN LAYOUT)         -->
+  <!-- ========================================================= -->
+  <div id="desktop-view-container" class="h-screen w-full flex overflow-hidden bg-white">
+    
+    <div class="w-full h-full flex overflow-hidden">
+
+      <!-- COLUMN 1: LEFT SIDEBAR (DARK THEME WITH COLLAPSIBLE RAIL SUPPORT) -->
+      <aside id="desktop-sidebar" class="w-60 lg:w-64 bg-[#131722] flex flex-col justify-between p-4 flex-shrink-0 select-none transition-all duration-300">
+        <div class="space-y-4">
+          
+          <!-- Clean PhoneMail Brand Header with Sidebar Toggle -->
+          <div class="flex items-center justify-between px-1 py-1 mb-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
+              <div class="min-w-0 sidebar-hide-on-collapse">
+                <div class="text-sm font-bold text-white tracking-tight leading-tight flex items-center gap-1.5">
+                  <span>PhoneMail</span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                </div>
+              </div>
+            </div>
+            <!-- Toggle Sidebar Button -->
+            <button 
+              type="button" 
+              onclick="toggleDesktopSidebar()" 
+              class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors flex-shrink-0"
+              title="Collapse / Expand Sidebar">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- + Compose Button (Pill Button / Icon Button when Collapsed) -->
+          <button 
+            type="button" 
+            onclick="openComposeModal()"
+            class="sidebar-compose-btn w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-5 rounded-2xl shadow-md flex items-center gap-3 transition-all active:scale-[0.98]"
+            title="Compose Message"
+            data-i18n-title="compose">
+            <svg class="w-4 h-4 text-slate-800 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span class="text-sm font-semibold tracking-wide sidebar-hide-on-collapse" data-i18n="compose">Compose</span>
+          </button>
+
+
+
+          <!-- Navigation Folders List -->
+          <nav class="space-y-1">
+            <button data-folder="inbox" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-[#202637] text-white transition-colors sidebar-icon-center" title="Inbox" data-i18n-title="inbox">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-300 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="inbox">Inbox</span>
+              </div>
+              <span id="d-badge-inbox" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#2d3448] text-slate-200 sidebar-hide-on-collapse">12</span>
+            </button>
+
+            <button data-folder="starred" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Starred" data-i18n-title="starred">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="starred">Starred</span>
+              </div>
+            </button>
+
+            <button data-folder="snoozed" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Snoozed" data-i18n-title="snoozed">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="snoozed">Snoozed</span>
+              </div>
+            </button>
+
+            <button data-folder="sent" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Sent" data-i18n-title="sent">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="sent">Sent</span>
+              </div>
+            </button>
+
+            <button data-folder="drafts" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Drafts" data-i18n-title="drafts">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="drafts">Drafts</span>
+              </div>
+              <span id="d-badge-drafts" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#2d3448] text-slate-200 sidebar-hide-on-collapse">4</span>
+            </button>
+
+            <button data-folder="spam" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Spam" data-i18n-title="spam">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="spam">Spam</span>
+              </div>
+            </button>
+
+            <button data-folder="trash" class="w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 hover:bg-[#1a202c] transition-colors sidebar-icon-center" title="Trash" data-i18n-title="trash">
+              <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span class="sidebar-hide-on-collapse" data-i18n="trash">Trash</span>
+              </div>
+            </button>
+          </nav>
+
+          <!-- Labels Section (Exact Match to Image 1) -->
+          <div class="sidebar-hide-on-collapse pt-4 border-t border-slate-800/80">
+            <div class="flex items-center justify-between px-3 mb-2 text-xs font-semibold text-slate-400 tracking-wider">
+              <span data-i18n="labels">Labels</span>
+              <button onclick="openComposeModal()" class="text-slate-400 hover:text-white" title="Add Label">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            
+            <div class="space-y-1">
+              <button data-label="Govt Receipts" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-300 hover:text-white hover:bg-emerald-950/60 transition-colors border border-emerald-500/20">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M4 22V11M20 22V11M10 22V11M14 22V11M2 11l10-7 10 7M12 2v2"/></svg>
+                  <span data-i18n="label_receipts">Govt Receipts</span>
+                </div>
+                <span id="d-badge-govt-receipts" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-500/30 text-emerald-200 font-mono">4</span>
+              </button>
+              <button data-label="Civic Grievance" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:text-white hover:bg-amber-950/60 transition-colors border border-amber-500/20">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                  <span data-i18n="label_grievance">Civic Grievance</span>
+                </div>
+                <span id="d-badge-civic-grievance" class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/30 text-amber-200 font-mono">0</span>
+              </button>
+              <button data-label="College" class="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#1a202c] transition-colors">
+                <span class="w-3 h-3 rounded-md bg-[#2563eb] inline-block flex-shrink-0"></span>
+                <span data-i18n="label_college">College</span>
+              </button>
+              <button data-label="Projects" class="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#1a202c] transition-colors">
+                <span class="w-3 h-3 rounded-md bg-[#10b981] inline-block flex-shrink-0"></span>
+                <span data-i18n="label_projects">Projects</span>
+              </button>
+              <button data-label="Personal" class="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#1a202c] transition-colors">
+                <span class="w-3 h-3 rounded-md bg-[#f43f5e] inline-block flex-shrink-0"></span>
+                <span data-i18n="label_personal">Personal</span>
+              </button>
+              <button data-label="Purchases" class="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#1a202c] transition-colors">
+                <span class="w-3 h-3 rounded-md bg-[#f59e0b] inline-block flex-shrink-0"></span>
+                <span data-i18n="label_purchases">Purchases</span>
+              </button>
+              <button data-label="Finance" class="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-[#1a202c] transition-colors">
+                <span class="w-3 h-3 rounded-md bg-[#8b5cf6] inline-block flex-shrink-0"></span>
+                <span data-i18n="label_finance">Finance</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Civic Telephony & Trust Tools -->
+          <div class="sidebar-hide-on-collapse pt-3 border-t border-slate-800/80 space-y-1">
+            <div class="px-3 mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Civic Telephony &amp; Trust</div>
+            <button onclick="openIvrHelplineModal()" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-300 hover:text-white hover:bg-indigo-950/50 transition-colors">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span>Voice IVR Helpline</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-indigo-500/20 text-indigo-300">1800</span>
+            </button>
+            <button onclick="openSmsBridgeModal()" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-teal-300 hover:text-white hover:bg-teal-950/50 transition-colors">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-teal-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+                <span>Two-Way SMS Bridge</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-teal-500/20 text-teal-300">Keypad</span>
+            </button>
+            <button onclick="openRobocallModal()" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-rose-300 hover:text-white hover:bg-rose-950/50 transition-colors">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span>Robocall Blast (SOS)</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-500/20 text-rose-300">DTMF</span>
+            </button>
+            <button onclick="openQrVerifyModal()" class="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/50 transition-colors">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/></svg>
+                <span>Verify QR Seal</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300">SHA256</span>
+            </button>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- COLUMN 2: MIDDLE MAIL LIST PANE (FLUID RESPONSIVE WIDTH) -->
+      <section id="desktop-mail-column" class="w-full md:w-[320px] lg:w-[360px] xl:w-[400px] flex-shrink-0 border-r border-[#eaedf2] flex flex-col bg-white transition-all">
+        
+        <!-- Search Bar -->
+        <div class="p-3.5 pb-2.5 flex items-center">
+          <div class="flex-1 bg-[#f1f3f4] rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
+            <svg class="w-4 h-4 text-slate-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input 
+              type="text" 
+              id="desktop-search-input"
+              placeholder="Search civic notices, departments, tracking IDs..."
+              data-i18n-placeholder="search_placeholder"
+              class="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none font-normal"
+            />
+            <button class="text-slate-500 hover:text-slate-800 p-0.5 flex-shrink-0" title="Search options">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3"/><path d="M18 12H6"/><path d="M14 20h-4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Tabs: All (with bottom active line), Unread, Starred, Mentions -->
+        <div class="px-4 pt-2 border-b border-[#eaedf2] flex items-center justify-between text-xs font-semibold text-slate-600 select-none">
+          <div class="flex items-center gap-4 text-xs">
+            <button data-filter="all" data-i18n="filter_all" class="text-slate-900 border-b-2 border-slate-900 pb-2.5 px-0.5 font-bold transition-all">All Notices</button>
+            <button data-filter="unread" data-i18n="filter_unread" class="text-slate-500 hover:text-slate-800 pb-2.5 px-0.5 transition-all">Unread</button>
+            <button data-filter="starred" data-i18n="starred" class="text-slate-500 hover:text-slate-800 pb-2.5 px-0.5 transition-all">Starred</button>
+            <button data-filter="mentions" class="text-slate-500 hover:text-slate-800 pb-2.5 px-0.5 transition-all">Mentions</button>
+          </div>
+          <button class="text-slate-400 hover:text-slate-600 pb-2">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+
+        <!-- Mail List Container -->
+        <div id="desktop-mail-list" class="flex-1 overflow-y-auto divide-y divide-[#f1f3f4]">
+          <!-- Populated via renderDesktopEmailList() -->
+        </div>
+
+      </section>
+
+      <!-- COLUMN 3: RIGHT READING PANE / EMAIL DETAIL (MATCHING IMAGE 1) -->
+      <section id="desktop-reading-pane" class="flex-1 flex flex-col bg-white overflow-hidden">
+        <!-- Populated via renderDesktopReadingPane() -->
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 2. MOBILE VIEW (CLEAN RESPONSIVE MAIL LAYOUT)             -->
+  <!-- ========================================================= -->
+  <div id="mobile-view-container" class="h-screen h-[100dvh] w-full flex items-center justify-center p-0 md:p-6 bg-[#f1f3f4] hidden">
+    
+    <!-- Mobile App Container -->
+    <div class="w-full md:max-w-[440px] h-full md:h-[860px] md:max-h-[96vh] bg-white md:rounded-3xl md:shadow-2xl md:border md:border-slate-200 overflow-hidden flex flex-col relative">
+
+      <!-- SCREEN 1: MOBILE INBOX -->
+      <div id="mobile-screen-inbox" class="flex-1 flex flex-col overflow-hidden relative">
+        
+        <div class="p-4 pb-2 bg-white flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                onclick="toggleMobileDrawer(true)" 
+                class="p-1.5 -ml-1 text-slate-700 hover:text-slate-900 rounded-xl hover:bg-slate-100 transition-colors" 
+                title="Navigation Menu">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+              <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Mail</h1>
+            </div>
+            <button onclick="toggleMobileDrawer(true)" class="w-8 h-8 rounded-full bg-[#1e293b] text-white flex items-center justify-center font-bold text-xs user-display-avatar shadow-sm ring-2 ring-slate-100">
+              D
+            </button>
+          </div>
+
+          <!-- Search Pill -->
+          <div class="relative flex items-center">
+            <span class="absolute left-3.5 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+            <input 
+              type="text" 
+              onclick="setMobileScreen('search')"
+              placeholder="Search mail" 
+              readonly
+              class="w-full bg-[#f1f3f4] rounded-2xl pl-10 pr-9 py-2.5 text-xs text-slate-700 cursor-pointer focus:outline-none"
+            />
+            <span class="absolute right-3.5 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3"/><path d="M18 12H6"/><path d="M14 20h-4"/></svg>
+            </span>
+          </div>
+
+          <!-- Filter Chips -->
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+            <button data-filter="all" data-i18n="filter_all" class="px-3.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 shadow-sm flex-shrink-0">All</button>
+            <button data-filter="unread" data-i18n="filter_unread" class="px-3.5 py-1 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 flex-shrink-0">Unread</button>
+            <button data-filter="starred" data-i18n="starred" class="px-3.5 py-1 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 flex-shrink-0">Starred</button>
+            <button data-filter="mentions" class="px-3.5 py-1 rounded-full text-xs font-medium text-slate-600 hover:bg-slate-100 flex-shrink-0">Mentions</button>
+          </div>
+        </div>
+
+        <!-- Mail List -->
+        <div id="mobile-mail-list" class="flex-1 overflow-y-auto divide-y divide-[#f1f3f4] pb-24">
+          <!-- Populated via renderMobileInboxList() -->
+        </div>
+
+        <!-- Floating Compose Action Button (FAB) Matching Image 2 -->
+        <button 
+          type="button" 
+          onclick="openComposeModal()"
+          class="absolute bottom-20 right-4 w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-20">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+
+        <!-- Bottom Tab Bar Matching Image 2 -->
+        <div class="h-14 border-t border-[#eaedf2] bg-white flex items-center justify-around text-slate-500 z-10 px-2">
+          <button data-mob-nav="mail" class="flex flex-col items-center gap-0.5 text-blue-600">
+            <div class="px-4 py-1 rounded-full bg-blue-100 text-blue-600">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <span class="text-[10px] font-bold" data-i18n="inbox">Mail</span>
+          </button>
+          <button data-mob-nav="starred" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-800">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="text-[10px]" data-i18n="starred">Starred</span>
+          </button>
+          <button data-mob-nav="sent" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-800">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span class="text-[10px]" data-i18n="sent">Sent</span>
+          </button>
+          <button onclick="toggleMobileDrawer(true)" data-mob-nav="more" class="flex flex-col items-center gap-0.5 text-slate-500 hover:text-slate-800">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            <span class="text-[10px]" data-i18n="more_options">More</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- SCREEN 2: MOBILE EMAIL DETAIL VIEW -->
+      <div id="mobile-screen-detail" class="flex-1 flex flex-col overflow-hidden hidden bg-white">
+        <div id="mobile-detail-content" class="flex-1 flex flex-col overflow-y-auto">
+          <!-- Populated via renderMobileDetailView() -->
+        </div>
+      </div>
+
+      <!-- SCREEN 3: MOBILE SEARCH VIEW (MATCHING IMAGE 2 SCREEN 3) -->
+      <div id="mobile-screen-search" class="flex-1 flex flex-col overflow-hidden hidden bg-white">
+        <div class="p-3 border-b border-[#eaedf2] flex items-center gap-2">
+          <button onclick="setMobileScreen('inbox')" class="p-1 text-slate-600 hover:text-slate-900">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          </button>
+          <div class="flex-1 relative flex items-center">
+            <input 
+              type="text" 
+              id="mobile-search-input"
+              placeholder="Search mail"
+              class="w-full bg-[#f1f3f4] rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none"
+            />
+            <button onclick="document.getElementById('mobile-search-input').value=''; state.searchQuery=''; renderMobileSearchList();" class="absolute right-2.5 text-slate-400 hover:text-slate-600">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 p-3 overflow-x-auto text-xs border-b border-[#eaedf2] no-scrollbar">
+          <button class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold text-xs flex-shrink-0">All</button>
+          <button class="px-3 py-1 rounded-full border border-slate-200 text-slate-600 text-xs flex-shrink-0">From</button>
+          <button class="px-3 py-1 rounded-full border border-slate-200 text-slate-600 text-xs flex-shrink-0">To</button>
+          <button class="px-3 py-1 rounded-full border border-slate-200 text-slate-600 text-xs flex-shrink-0">Attachments</button>
+          <button class="px-3 py-1 rounded-full border border-slate-200 text-slate-600 text-xs flex-shrink-0">Date</button>
+        </div>
+
+        <div id="mobile-search-results" class="flex-1 overflow-y-auto divide-y divide-[#f1f3f4]">
+          <!-- Populated via renderMobileSearchList() -->
+        </div>
+      </div>
+
+      <!-- SCREEN 4: MOBILE SLIDE-OUT DRAWER (MATCHING IMAGE 2 SCREEN 4) -->
+      <div id="mobile-drawer-overlay" onclick="toggleMobileDrawer(false)" class="absolute inset-0 bg-black/40 z-30 hidden transition-opacity"></div>
+      
+      <div id="mobile-drawer" class="absolute top-0 bottom-0 left-0 w-72 bg-white z-40 shadow-2xl flex flex-col -translate-x-full transition-transform duration-300">
+        
+        <!-- User Profile Header -->
+        <div class="p-5 border-b border-[#eaedf2] flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[#1e293b] text-white flex items-center justify-center font-bold text-sm user-display-avatar shadow-sm">
+              D
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900 user-display-name">Dharun R</div>
+              <div class="text-xs text-slate-400 font-mono flex items-center gap-1">
+                <span class="user-display-email truncate max-w-[140px]">dharunr@kpriet.ac.in</span>
+                <svg class="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Drawer Folders -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-1">
+          <button data-folder="inbox" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              <span data-i18n="inbox">Inbox</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">12</span>
+          </button>
+
+          <button data-folder="starred" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span data-i18n="starred">Starred</span>
+            </div>
+          </button>
+
+          <button data-folder="snoozed" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span data-i18n="snoozed">Snoozed</span>
+            </div>
+          </button>
+
+          <button data-folder="sent" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span data-i18n="sent">Sent</span>
+            </div>
+          </button>
+
+          <button data-folder="drafts" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span data-i18n="drafts">Drafts</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">4</span>
+          </button>
+
+          <button data-folder="spam" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span data-i18n="spam">Spam</span>
+            </div>
+          </button>
+
+          <button data-folder="trash" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span data-i18n="trash">Trash</span>
+            </div>
+          </button>
+
+          <!-- Drawer Labels -->
+          <div class="pt-4 border-t border-[#eaedf2] space-y-1">
+            <div class="flex items-center justify-between px-3 py-1 text-xs font-semibold text-slate-500">
+              <span data-i18n="labels">Labels</span>
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <button data-label="Govt Receipts" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-emerald-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M9 10v11M15 10v11M19 10v11M12 2 2 7h20L12 2z"/></svg>
+                <span data-i18n="label_receipts">Govt Receipts</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900">Locker</span>
+            </button>
+            <button data-label="Civic Grievance" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-amber-800 bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                <span data-i18n="label_grievance">Civic Grievance</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900">Tickets</span>
+            </button>
+            <button data-label="College" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50">
+              <span class="w-3 h-3 rounded-md bg-[#2563eb] inline-block"></span>
+              <span data-i18n="label_college">College</span>
+            </button>
+            <button data-label="Projects" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50">
+              <span class="w-3 h-3 rounded-md bg-[#10b981] inline-block"></span>
+              <span data-i18n="label_projects">Projects</span>
+            </button>
+            <button data-label="Personal" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50">
+              <span class="w-3 h-3 rounded-md bg-[#f43f5e] inline-block"></span>
+              <span data-i18n="label_personal">Personal</span>
+            </button>
+            <button data-label="Purchases" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50">
+              <span class="w-3 h-3 rounded-md bg-[#f59e0b] inline-block"></span>
+              <span data-i18n="label_purchases">Purchases</span>
+            </button>
+            <button data-label="Finance" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50">
+              <span class="w-3 h-3 rounded-md bg-[#8b5cf6] inline-block"></span>
+              <span data-i18n="label_finance">Finance</span>
+            </button>
+          </div>
+
+          <!-- Bottom Drawer Settings -->
+          <div class="pt-4 border-t border-[#eaedf2] space-y-1">
+            <button onclick="toggleMobileDrawer(false); openSettingsModal();" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span data-i18n="settings">Settings</span>
+            </button>
+            <button onclick="toggleMobileDrawer(false); openHelplineModal();" class="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-600 hover:bg-slate-50">
+              <svg class="w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span data-i18n="toll_free_ivr">Help & feedback</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 3. COMPOSE MODAL (CLEAN GMAIL FLOATING MODAL)              -->
+  <!-- ========================================================= -->
+  <div id="compose-modal" class="fixed inset-x-2 sm:inset-x-auto sm:right-4 bottom-2 sm:bottom-4 z-50 w-auto sm:w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-slate-300 overflow-hidden hidden flex flex-col">
+    <!-- Header -->
+    <div class="bg-[#131722] text-white px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-xs font-semibold">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span>New Message</span>
+      </div>
+      <button onclick="closeComposeModal()" class="text-slate-400 hover:text-white p-0.5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form onsubmit="handleComposeSubmit(event)" class="flex flex-col flex-1 overflow-y-auto">
+      <div class="px-4 py-2 border-b border-slate-100 flex items-center gap-2">
+        <span class="text-xs text-slate-400 w-12 font-medium">To</span>
+        <input 
+          type="text" 
+          id="compose-to" 
+          placeholder="Recipients (phone or email)" 
+          required 
+          class="flex-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none py-1"
+        />
+      </div>
+
+      <div class="px-4 py-2 border-b border-slate-100 flex items-center gap-2">
+        <span class="text-xs text-slate-400 w-12 font-medium">Subject</span>
+        <input 
+          type="text" 
+          id="compose-subject" 
+          placeholder="Subject" 
+          required 
+          class="flex-1 text-xs text-slate-800 placeholder-slate-400 focus:outline-none py-1"
+        />
+      </div>
+
+      <div class="p-4 flex-1">
+        <textarea 
+          id="compose-body" 
+          rows="8" 
+          placeholder="Type your message here..." 
+          required 
+          class="w-full text-xs text-slate-800 placeholder-slate-400 focus:outline-none resize-none leading-relaxed"
+        ></textarea>
+      </div>
+
+      <!-- Quick Civic Grievance Presets -->
+      <div class="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-500">
+        <span class="font-medium">Civic:</span>
+        <button type="button" onclick="setGrievanceDept('water@city.phonemail.gov', 'Water Supply')" class="px-2 py-0.5 rounded bg-white border border-slate-200 hover:border-blue-400 text-slate-700">Water</button>
+        <button type="button" onclick="setGrievanceDept('electricity@city.phonemail.gov', 'Electricity')" class="px-2 py-0.5 rounded bg-white border border-slate-200 hover:border-blue-400 text-slate-700">Electricity</button>
+        <button type="button" onclick="setGrievanceDept('roads@city.phonemail.gov', 'Roads & Works')" class="px-2 py-0.5 rounded bg-white border border-slate-200 hover:border-blue-400 text-slate-700">Roads</button>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
+        <div class="flex items-center gap-2">
+          <button 
+            type="submit" 
+            id="btn-compose-send"
+            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full text-xs shadow-md transition-all flex items-center gap-1.5">
+            <span>Send</span>
+          </button>
+          <select id="compose-label" class="text-[11px] text-slate-600 border border-slate-200 rounded-lg px-2 py-1.5 bg-white">
+            <option value="">No Label</option>
+            <option value="College">College</option>
+            <option value="Projects">Projects</option>
+            <option value="Personal">Personal</option>
+            <option value="Purchases">Purchases</option>
+            <option value="Finance">Finance</option>
+          </select>
+        </div>
+        <button type="button" onclick="closeComposeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 4. CIVIC EMERGENCY BROADCAST MODAL (FOR DISASTER ALERTS)   -->
+  <!-- ========================================================= -->
+  <div id="broadcast-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-[#131722] border border-amber-500/40 rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl text-white max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-600/30">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18h10"/><path d="M12 2v1"/><path d="m4.93 4.93.7.7"/><path d="m18.36 5.64.7-.7"/><path d="M12 6a6 6 0 0 0-6 6v6h12v-6a6 6 0 0 0-6-6Z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Emergency Civic Broadcast (G2C)</span>
+              <span class="px-2 py-0.2 rounded-full text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono font-bold uppercase">Disaster Alert</span>
+            </h3>
+            <p class="text-[11px] text-amber-300">Authorized Government Emergency Administration</p>
+          </div>
+        </div>
+        <button onclick="closeBroadcastModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="my-3 p-3 rounded-2xl bg-amber-950/40 border border-amber-800/40 text-xs text-amber-200 leading-normal">
+        <strong class="text-white">How it works:</strong> Broadcasts bypass spam filters, pin to the top of the PhoneMail inbox with an 🚨 Emergency Notice banner, and simultaneously dispatch a priority Twilio SMS broadcast to recipients' physical phones.
+      </div>
+
+      <!-- Quick Disaster Presets -->
+      <div class="mb-3 space-y-1.5">
+        <div class="text-[11px] font-semibold text-slate-400">Quick Disaster Templates:</div>
+        <div class="flex items-center gap-1.5 flex-wrap text-[10px]">
+          <button type="button" onclick="setBroadcastPreset('flood')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700">🌊 Flood & Cyclone Warning</button>
+          <button type="button" onclick="setBroadcastPreset('heatwave')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700">🔥 Extreme Heatwave</button>
+          <button type="button" onclick="setBroadcastPreset('closure')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700">🚧 Road/Bridge Closure</button>
+          <button type="button" onclick="setBroadcastPreset('curfew')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700">⚠️ Night Curfew Order</button>
+        </div>
+      </div>
+
+      <form onsubmit="handleSendBroadcast(event)" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Target Phone Area Code</label>
+            <select 
+              id="bcast-target-area" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-medium">
+              <option value="all">All Registered Citizens (City-wide)</option>
+              <option value="987">Area Code +1987 (Coastal / Ward 14)</option>
+              <option value="912">Area Code +1912 (Suburbs / Ward 12)</option>
+              <option value="800">Area Code +1800 (Helpline Area)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Alert Severity</label>
+            <select 
+              id="bcast-severity" 
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-medium">
+              <option value="CRITICAL">🔴 CRITICAL (Immediate Life Safety)</option>
+              <option value="HIGH">🟠 HIGH (Evacuation / Road Block)</option>
+              <option value="MODERATE">🟡 MODERATE (Civic Precaution)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Authorized Issuing Department</label>
+          <input 
+            type="text" 
+            id="bcast-dept" 
+            value="Disaster Management & Civic Authority"
+            required
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Alert Headline</label>
+          <input 
+            type="text" 
+            id="bcast-headline" 
+            placeholder="e.g. Flash Flood & Road Closure Advisory"
+            value="Flash Flood & Cyclone Warning for Coastal Wards 12-16"
+            required
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-semibold"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Advisory Message & Instructions</label>
+          <textarea 
+            id="bcast-details" 
+            rows="3" 
+            required
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+          >URGENT: Heavy waterlogging and severe gale winds expected within the next 3 hours. Citizens in low-lying areas are advised to move to designated relief shelters. Emergency helpline 1800-555-0199 is active.</textarea>
+        </div>
+
+        <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-300 space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400">✓</span>
+            <span><strong>Inbox Pinning:</strong> Pins to the very top of PhoneMail inbox as 🚨 Emergency Notice.</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-400">✓</span>
+            <span><strong>Twilio SMS Broadcast:</strong> Simultaneously dispatches priority SMS to physical phones.</span>
+          </div>
+          <label class="flex items-center gap-2 pt-1 border-t border-slate-800 cursor-pointer text-rose-300 hover:text-white">
+            <input type="checkbox" id="bcast-robocalls" checked class="w-3.5 h-3.5 rounded text-rose-600 focus:ring-0">
+            <span><strong>📞 Outbound Disaster Robocall Blast:</strong> Automatically ring citizens with interactive DTMF 1/2 SOS rescue inputs.</span>
+          </label>
+        </div>
+
+        <button 
+          id="btn-send-bcast"
+          type="submit" 
+          class="w-full bg-gradient-to-r from-amber-600 via-rose-600 to-amber-700 hover:from-amber-500 hover:to-rose-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+          <span>Dispatch Emergency Broadcast (SMS + Pinned Web Alert)</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 5. DEDICATED DUAL-PORTAL AUTHENTICATION GATEWAY           -->
+  <!-- ========================================================= -->
+  <div id="auth-modal" style="position: fixed; inset: 0; z-index: 9999; background: rgba(7, 11, 20, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: none; align-items: center; justify-content: center; padding: 1.25rem; overflow-y: auto;" class="hidden">
+    <div style="background-color: #111827; max-width: 56rem; width: 100%; border: 1px solid #334155; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); overflow: hidden; position: relative; margin: auto;" class="flex flex-col md:flex-row text-white">
+      
+      <!-- Close button on modal (top right on mobile & desktop) -->
+      <button 
+        type="button" 
+        onclick="closeAuthModal()" 
+        class="absolute top-4 right-4 z-20 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 transition-all cursor-pointer"
+        title="Dismiss / Return to Mailbox">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+
+      <!-- LEFT COLUMN: Institutional Civic Gateway & Fast-Track Personas -->
+      <div style="background: linear-gradient(135deg, #0c1220 0%, #11192e 50%, #0c1220 100%);" class="w-full md:w-5/12 p-6 sm:p-7 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between">
+        <div class="space-y-5">
+          <!-- Logo & Brand -->
+          <div>
+            <div class="flex items-center gap-2.5 mb-2">
+              <div class="w-9 h-9 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              </div>
+              <div>
+                <h1 class="text-base font-bold tracking-tight text-white leading-tight">PhoneMail Gateway</h1>
+                <p class="text-[10px] text-blue-400 font-mono tracking-wider uppercase">Official Civic Communications</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mt-2.5">
+              Unified asynchronous postal system bridging every citizen and municipal authority.
+            </p>
+          </div>
+
+          <!-- Trust Badges List -->
+          <div class="space-y-3 pt-2">
+            <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70 text-xs">
+              <div class="text-emerald-400 mt-0.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </div>
+              <div>
+                <span class="font-semibold text-white block">Phone-as-Email Identity</span>
+                <span class="text-[11px] text-slate-400">Mobile number as permanent digital address (<span class="font-mono text-slate-300">+phone@phonemail.com</span>).</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70 text-xs">
+              <div class="text-indigo-400 mt-0.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              </div>
+              <div>
+                <span class="font-semibold text-white block">Voice & Keypad Inclusive</span>
+                <span class="text-[11px] text-slate-400">Toll-free IVR & automated spoken voice OTP in 11 native languages.</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70 text-xs">
+              <div class="text-amber-400 mt-0.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.06 13.54-3.5-3.5 1.41-1.41 2.09 2.08 5.09-5.09 1.41 1.42-6.5 6.5z"/></svg>
+              </div>
+              <div>
+                <span class="font-semibold text-white block">Official Civic Authority</span>
+                <span class="text-[11px] text-slate-400">Cryptographically sealed receipts, grievance tracking & mass broadcasts.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1-Click Fast-Track Persona Switcher (For easy judging & demoing) -->
+          <div class="pt-2">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <span>Instant Demo Personas</span>
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+              <button 
+                type="button" 
+                onclick="quickDemoLogin('+19876543210')" 
+                class="w-full text-left p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-blue-500/50 transition-all flex items-center justify-between group">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-xs font-semibold text-white group-hover:text-blue-300">Elena Rostova</div>
+                    <div class="text-[10px] text-slate-400 font-mono">+19876543210 • Registered Citizen</div>
+                  </div>
+                </div>
+                <span class="text-[10px] font-medium text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">Launch</span>
+              </button>
+
+              <button 
+                type="button" 
+                onclick="quickDemoLogin('+18005550199')" 
+                class="w-full text-left p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 transition-all flex items-center justify-between group">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M4 22V11M20 22V11M10 22V11M14 22V11M2 11l10-7 10 7M12 2v2"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-xs font-semibold text-white group-hover:text-indigo-300">Civic Services Dept</div>
+                    <div class="text-[10px] text-slate-400 font-mono">+18005550199 • Chief Grievance Officer</div>
+                  </div>
+                </div>
+                <span class="text-[10px] font-medium text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">Launch</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+          <span>SHA-256 Tamper Evident</span>
+          <span>11 Official Languages</span>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Dual-Portal Interactive Authentication Workspace -->
+      <div style="background-color: #111827;" class="w-full md:w-7/12 p-6 sm:p-7 flex flex-col justify-between">
+        <div>
+          <!-- Top Role Selector: Citizen vs Official -->
+          <div class="flex items-center gap-1.5 p-1 bg-slate-950/80 rounded-2xl border border-slate-800 mb-5">
+            <button 
+              type="button" 
+              id="tab-btn-citizen" 
+              onclick="switchAuthPortal('citizen')" 
+              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-md">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Citizen Portal</span>
+            </button>
+            <button 
+              type="button" 
+              id="tab-btn-official" 
+              onclick="switchAuthPortal('official')" 
+              class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M4 22V11M20 22V11M10 22V11M14 22V11M2 11l10-7 10 7M12 2v2"/></svg>
+              <span>Department Official</span>
+            </button>
+          </div>
+
+          <!-- ================= CITIZEN PORTAL ================= -->
+          <div id="portal-citizen-section" class="space-y-4">
+            
+            <!-- Citizen Submode: Login vs Register -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 id="citizen-flow-title" class="text-sm font-bold text-white">Sign In to Citizen Mailbox</h3>
+                <p id="citizen-flow-desc" class="text-[11px] text-slate-400">Passwordless verification via SMS or automated Voice Call</p>
+              </div>
+              <div class="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[11px]">
+                <button 
+                  type="button" 
+                  id="citizen-mode-login" 
+                  onclick="switchCitizenMode('login')" 
+                  class="px-2.5 py-1 rounded-md font-semibold text-white bg-slate-800">
+                  Sign In
+                </button>
+                <button 
+                  type="button" 
+                  id="citizen-mode-register" 
+                  onclick="switchCitizenMode('register')" 
+                  class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">
+                  Register
+                </button>
+              </div>
+            </div>
+
+            <!-- Citizen Form Fields -->
+            <div class="space-y-3.5">
+              
+              <!-- Full Name (Only for Registration mode) -->
+              <div id="citizen-name-container" class="hidden">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Citizen Full Name</label>
+                <input 
+                  type="text" 
+                  id="auth-name" 
+                  placeholder="e.g. Elena Rostova or Arun Kumar" 
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <!-- Phone Number -->
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-semibold text-slate-300">Mobile Phone Number</label>
+                  <span class="text-[10px] text-slate-400 font-mono">Format: +&lt;country&gt;&lt;digits&gt;</span>
+                </div>
+                <div class="relative">
+                  <input 
+                    type="tel" 
+                    id="auth-phone" 
+                    placeholder="+19876543210 or +919442685399" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">Your phone number directly serves as your digital mailbox address.</p>
+              </div>
+
+              <!-- Preferred Language (Registration Mode) -->
+              <div id="citizen-lang-container" class="hidden">
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Preferred Language for Voice & Interface</label>
+                <select 
+                  id="citizen-pref-lang" 
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                  <option value="en">English (English)</option>
+                  <option value="hi">हिन्दी (Hindi)</option>
+                  <option value="ta">தமிழ் (Tamil)</option>
+                  <option value="te">తెలుగు (Telugu)</option>
+                  <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                  <option value="bn">বাংলা (Bengali)</option>
+                  <option value="mr">मराठी (Marathi)</option>
+                  <option value="gu">ગુજરાતી (Gujarati)</option>
+                  <option value="ml">മലയാളം (Malayalam)</option>
+                  <option value="es">Español (Spanish)</option>
+                  <option value="fr">Français (French)</option>
+                </select>
+              </div>
+
+              <!-- Verification Method Selector -->
+              <div class="space-y-1.5">
+                <label class="block text-[11px] font-semibold text-slate-400">Request Verification Code via Twilio</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button 
+                    type="button" 
+                    onclick="requestOtp('sms')" 
+                    class="bg-emerald-600/90 hover:bg-emerald-500 text-white font-medium py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md transition-all">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>SMS OTP</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    onclick="requestOtp('voice')" 
+                    class="bg-indigo-600/90 hover:bg-indigo-500 text-white font-medium py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md transition-all">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <span>Voice Call OTP</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- OTP Verification Input & Action -->
+              <div id="otp-verify-section" class="pt-2 border-t border-slate-800 space-y-2.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Enter 6-Digit Code</label>
+                  <input 
+                    type="text" 
+                    id="auth-code" 
+                    maxlength="6" 
+                    placeholder="000000" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl py-2 text-center text-lg font-mono tracking-widest text-amber-300 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <button 
+                  type="button" 
+                  id="btn-citizen-submit" 
+                  onclick="verifyAndLogin()" 
+                  class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-1.5">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span id="citizen-submit-label">Verify & Open Mailbox</span>
+                </button>
+              </div>
+
+              <div id="auth-feedback" class="text-xs min-h-[16px] text-center"></div>
+            </div>
+
+          </div>
+
+          <!-- ================= OFFICIAL PORTAL ================= -->
+          <div id="portal-official-section" class="space-y-4 hidden">
+            
+            <!-- Official Submode: Login vs Onboarding -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 id="official-flow-title" class="text-sm font-bold text-white">Civic Authority Terminal</h3>
+                <p id="official-flow-desc" class="text-[11px] text-slate-400">Institutional credentials for authorized officers & dispatchers</p>
+              </div>
+              <div class="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800 text-[11px]">
+                <button 
+                  type="button" 
+                  id="official-mode-login" 
+                  onclick="switchOfficialMode('login')" 
+                  class="px-2.5 py-1 rounded-md font-semibold text-white bg-slate-800">
+                  Officer Login
+                </button>
+                <button 
+                  type="button" 
+                  id="official-mode-register" 
+                  onclick="switchOfficialMode('register')" 
+                  class="px-2.5 py-1 rounded-md font-semibold text-slate-400 hover:text-white">
+                  Onboarding
+                </button>
+              </div>
+            </div>
+
+            <!-- Official Login Panel -->
+            <div id="official-login-panel" class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Officer Badge ID, Official Email, or Helpline Number</label>
+                <input 
+                  type="text" 
+                  id="official-identifier" 
+                  placeholder="e.g. OFF-BLR-0199 or +18005550199" 
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Jurisdiction / Department</label>
+                <select 
+                  id="official-department-select" 
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                  <option value="Public Works & Civic Grievance">Public Works & Civic Grievance</option>
+                  <option value="Disaster Management & Emergency Dispatch">Disaster Management & Emergency Dispatch</option>
+                  <option value="Municipal Revenue & Property Tax">Municipal Revenue & Property Tax</option>
+                  <option value="Health & Sanitation Directorate">Health & Sanitation Directorate</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-semibold text-slate-300">Officer Password / Security PIN</label>
+                  <span class="text-[10px] text-indigo-400 font-mono">Demo PIN: admin123</span>
+                </div>
+                <input 
+                  type="password" 
+                  id="official-password" 
+                  placeholder="••••••••" 
+                  value="admin123"
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <button 
+                type="button" 
+                onclick="loginOfficial()" 
+                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.06 13.54-3.5-3.5 1.41-1.41 2.09 2.08 5.09-5.09 1.41 1.42-6.5 6.5z"/></svg>
+                <span>Authorize & Open Department Terminal</span>
+              </button>
+            </div>
+
+            <!-- Official Onboarding Panel -->
+            <div id="official-register-panel" class="space-y-3 hidden">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Officer Name</label>
+                  <input 
+                    type="text" 
+                    id="official-reg-name" 
+                    placeholder="Insp. K. Raman" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Designation</label>
+                  <input 
+                    type="text" 
+                    id="official-reg-designation" 
+                    placeholder="Chief Ward Inspector" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Department</label>
+                  <select 
+                    id="official-reg-dept" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <option value="Public Works & Civic Grievance">Public Works</option>
+                    <option value="Disaster Management & Emergency Dispatch">Disaster Response</option>
+                    <option value="Municipal Revenue & Property Tax">Revenue & Tax</option>
+                    <option value="Health & Sanitation Directorate">Health & Sanitation</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Officer Badge ID</label>
+                  <input 
+                    type="text" 
+                    id="official-reg-badge" 
+                    placeholder="OFF-BLR-9012" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Official Govt Email</label>
+                <input 
+                  type="email" 
+                  id="official-reg-email" 
+                  placeholder="officer.raman@city.phonemail.gov" 
+                  class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Gov Clearance Key</label>
+                  <input 
+                    type="text" 
+                    id="official-reg-key" 
+                    value="GOV-OFFICIAL-2026" 
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Set Password</label>
+                  <input 
+                    type="password" 
+                    id="official-reg-password" 
+                    placeholder="••••••••" 
+                    value="admin123"
+                    class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                onclick="registerOfficial()" 
+                class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Submit Credentials for Department Clearance</span>
+              </button>
+            </div>
+
+            <div id="official-auth-feedback" class="text-xs min-h-[16px] text-center"></div>
+          </div>
+
+        </div>
+
+        <!-- Official Department Terminal Clearance Note -->
+        <div class="pt-4 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+          <span class="flex items-center gap-1 text-slate-400">
+            <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.06 13.54-3.5-3.5 1.41-1.41 2.09 2.08 5.09-5.09 1.41 1.42-6.5 6.5z"/></svg>
+            256-bit TLS Encrypted
+          </span>
+          <span class="font-mono text-slate-400">Node.js + SQLite WAL</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 6. VOICE IVR HELPLINE MODAL (NON-SMARTPHONE CITIZENS)      -->
+  <!-- ========================================================= -->
+  <div id="ivr-helpline-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-[#131722] border border-indigo-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-white max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Voice IVR Grievance Helpline</span>
+              <span class="px-2 py-0.2 rounded-full text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">Toll-Free</span>
+            </h3>
+            <p class="text-[11px] text-indigo-300 font-mono">+1 (800) 555-0199</p>
+          </div>
+        </div>
+        <button onclick="closeIvrHelplineModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Citizen Benefit Banner -->
+      <div class="my-4 p-3 rounded-2xl bg-indigo-950/60 border border-indigo-800/60 text-xs text-indigo-200 leading-normal">
+        <strong class="text-white">Citizen Benefit:</strong> Bridges the digital divide for illiterate citizens, elderly citizens, and those with basic keypad/feature phones without internet access.
+      </div>
+
+      <!-- STEP 1: Dial Toll-Free Number -->
+      <div id="ivr-step-call" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Citizen Caller Phone (Basic Phone / Keypad)</label>
+          <input 
+            type="tel" 
+            id="ivr-caller-phone" 
+            value="+19876543210" 
+            placeholder="+19876543210"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-indigo-500"
+          />
+          <p class="text-[10px] text-slate-400 mt-1">Caller ID will be automatically captured by Twilio.</p>
+        </div>
+
+        <button 
+          type="button" 
+          onclick="simulateIvrDial()"
+          class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>Dial Toll-Free Number (+1 800 555-0199)</span>
+        </button>
+      </div>
+
+      <!-- STEP 2: Keypad Selection (IVR Prompt) -->
+      <div id="ivr-step-keypad" class="space-y-4 hidden">
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-700 space-y-1.5">
+          <div class="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            Twilio IVR Voice Prompt Playing:
+          </div>
+          <p class="text-xs text-white font-medium italic">
+            "Welcome to the Citizen PhoneMail Helpline! Press 1 to create an account. Press 2 to record a public grievance."
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button 
+            type="button" 
+            onclick="simulateIvrKeypress('1')"
+            class="p-4 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-left space-y-1 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-blue-600 text-white font-mono font-bold text-sm flex items-center justify-center">1</div>
+            <div class="text-xs font-bold text-white">Create Account</div>
+            <div class="text-[10px] text-slate-400">Register PhoneMail account</div>
+          </button>
+
+          <button 
+            type="button" 
+            onclick="simulateIvrKeypress('2')"
+            class="p-4 rounded-2xl bg-indigo-950/80 hover:bg-indigo-900/80 border border-indigo-500 text-left space-y-1 shadow-lg shadow-indigo-600/20 transition-all">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500 text-white font-mono font-bold text-sm flex items-center justify-center">2</div>
+            <div class="text-xs font-bold text-white flex items-center gap-1">
+              <span>Record Grievance</span>
+              <span class="text-amber-300">★</span>
+            </div>
+            <div class="text-[10px] text-indigo-200">Record voice complaint</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Voice Grievance Recording (<Record>) -->
+      <div id="ivr-step-record" class="space-y-4 hidden">
+        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-700 space-y-1.5">
+          <div class="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            Twilio &lt;Record&gt; In Progress...
+          </div>
+          <p class="text-xs text-white italic">
+            "Please state your civic grievance, problem, and ward location after the beep. Press pound when finished."
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Spoken Problem (Simulated Voice Input)</span>
+            <span class="text-[10px] text-indigo-300">Auto-transcribed</span>
+          </label>
+          <textarea 
+            id="ivr-voice-problem" 
+            rows="3" 
+            class="w-full bg-slate-950 border border-indigo-500/60 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-indigo-400"
+          >No water supply in Ward 14 since morning</textarea>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-wrap text-[10px]">
+          <span class="text-slate-400">Quick presets:</span>
+          <button type="button" onclick="setSampleIssue('No water supply in Ward 14 since morning')" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white border border-slate-700">Water Supply Issue</button>
+          <button type="button" onclick="setSampleIssue('Streetlight not working on 5th cross road for 4 days')" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white border border-slate-700">Streetlight Failure</button>
+          <button type="button" onclick="setSampleIssue('Garbage overflow and open sewer in block B')" class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 hover:text-white border border-slate-700">Garbage Overflow</button>
+        </div>
+
+        <button 
+          id="ivr-submit-btn"
+          type="button" 
+          onclick="submitVoiceGrievanceRecord()"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          <span>Press # (Finish Recording & Submit)</span>
+        </button>
+      </div>
+
+      <!-- STEP 4: Success & Acknowledgment -->
+      <div id="ivr-step-success" class="space-y-4 text-center py-2 hidden">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-bold text-white">Voice Grievance Recorded & Delivered!</h4>
+          <p class="text-xs text-slate-400 mt-0.5">Email created in Department Inbox with audio & transcription</p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-left space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Docket / Ticket ID:</span>
+            <span id="ivr-result-ticket" class="font-mono font-bold text-amber-300">TKT-XXXX</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Assigned Department:</span>
+            <span id="ivr-result-dept" class="font-bold text-white">Water Supply Board</span>
+          </div>
+          <div class="pt-2 border-t border-slate-800">
+            <div class="text-[10px] uppercase text-indigo-400 font-bold mb-0.5">Auto-Transcription:</div>
+            <div id="ivr-result-transcription" class="italic text-slate-200">"..."</div>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button 
+            type="button" 
+            onclick="quickSwitchUser('+18005550199'); closeIvrHelplineModal();"
+            class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">
+            🏛️ View in Department Inbox
+          </button>
+          <button 
+            type="button" 
+            onclick="closeIvrHelplineModal()"
+            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 7. OFFICIAL DIGITAL RECEIPT & WELFARE LOCKER VIEWER MODAL  -->
+  <!-- ========================================================= -->
+  <div id="receipt-viewer-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div id="printable-receipt-card" class="bg-white rounded-3xl max-w-xl w-full shadow-2xl overflow-hidden text-slate-800 border border-slate-200">
+      
+      <!-- Receipt Header with National/Municipal Emblem -->
+      <div class="bg-[#1e293b] text-white p-6 relative">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-900 flex items-center justify-center text-2xl shadow-md">
+              🏛️
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-widest text-amber-300 font-bold">Official Digital Paper Trail</div>
+              <h3 id="receipt-modal-title" class="text-base font-bold text-white tracking-tight">Government Digital Receipt</h3>
+              <div id="receipt-modal-authority" class="text-xs text-slate-300 font-medium">Municipal Corporation & Welfare Administration</div>
+            </div>
+          </div>
+          <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white p-1.5">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Tamper-evident Green Seal Badge -->
+        <div class="mt-4 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-emerald-300 font-bold">
+            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span>CRYPTOGRAPHICALLY VERIFIED & TAMPER-EVIDENT</span>
+          </div>
+          <span id="receipt-modal-seal-id" class="font-mono text-[10px] text-emerald-200 font-bold">SEAL-88910-SHA256</span>
+        </div>
+      </div>
+
+      <!-- Receipt Body Particulars -->
+      <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Linked Citizen Phone:</div>
+            <div id="receipt-modal-phone" class="font-mono font-bold text-slate-800 text-sm mt-0.5">+19876543210</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Document Docket / ID:</div>
+            <div id="receipt-modal-docket" class="font-mono font-bold text-blue-700 text-sm mt-0.5">DOC-2026-9912</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Date & Time Issued:</div>
+            <div id="receipt-modal-date" class="font-medium text-slate-700 mt-0.5">29-Sep-2026, 14:15 UTC</div>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase text-slate-400 font-bold">Verification Status:</div>
+            <div class="font-bold text-emerald-700 mt-0.5 flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>100% Authentic (Govt Verified)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Receipt Content Breakdown -->
+        <div class="space-y-2">
+          <div class="text-xs font-bold text-slate-800">Receipt Details & Assessment:</div>
+          <div id="receipt-modal-body" class="p-4 bg-slate-50 rounded-2xl border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+            Content
+          </div>
+        </div>
+
+        <!-- SHA-256 Cryptographic Hash Seal -->
+        <div class="p-3 bg-slate-900 rounded-xl text-white space-y-1">
+          <div class="text-[10px] uppercase tracking-wider text-amber-300 font-bold flex items-center justify-between">
+            <span>SHA-256 Digital Verification Hash:</span>
+            <span class="text-[9px] text-slate-400">HMAC-SHA256</span>
+          </div>
+          <div id="receipt-modal-hash" class="font-mono text-[11px] text-emerald-400 break-all select-all">
+            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          </div>
+        </div>
+
+        <!-- Physical Scannable QR Code Seal Tile -->
+        <div class="p-3.5 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-between gap-4">
+          <div class="flex-1">
+            <div class="text-[10px] uppercase font-extrabold text-emerald-800 tracking-wider">Physical Verification QR Code</div>
+            <div class="text-xs text-slate-600 mt-0.5">Scan with phone camera or PhoneMail QR Verifier to check against municipal ledger.</div>
+            <button 
+              type="button" 
+              onclick="openQrVerifyWithCurrentSeal()" 
+              class="mt-2 text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 transition-colors">
+              <span>🔍 Test Verify This Seal</span>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div id="receipt-modal-qr-container" class="w-20 h-20 flex-shrink-0 bg-white border border-slate-200 rounded-xl p-1 shadow-sm flex items-center justify-center">
+            <!-- Dynamic QR Code SVG injected via app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="text-[11px] text-slate-500 flex items-center gap-1">
+          <span>🔒 Permanent record in Welfare Locker</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button 
+            type="button" 
+            onclick="window.print()" 
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors shadow-sm">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            <span>Print Physical Copy</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="triggerPdfDownload()" 
+            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Download PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 8. INTERACTIVE DISASTER VOICE ROBOCALL SIMULATOR MODAL    -->
+  <!-- ========================================================= -->
+  <div id="robocall-simulator-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-[#0f172a] border border-rose-500/50 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-white relative overflow-y-auto max-h-[90vh]">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-rose-600 flex items-center justify-center text-white shadow-lg shadow-rose-600/40">
+            <svg class="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Disaster Voice Robocall Blast</span>
+              <span class="px-2 py-0.2 rounded-full text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono font-bold">DTMF SOS</span>
+            </h3>
+            <p class="text-[11px] text-rose-300">Outbound Voice Robocall Simulation</p>
+          </div>
+        </div>
+        <button onclick="closeRobocallModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Live Phone Simulation Container -->
+      <div class="mt-4 space-y-4">
+        <!-- Step 1: Incoming Call Screen -->
+        <div id="robocall-step-incoming" class="text-center py-4 space-y-3">
+          <div class="w-16 h-16 rounded-full bg-rose-600/20 border-2 border-rose-500 text-rose-400 flex items-center justify-center mx-auto">
+            <svg class="w-8 h-8 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-rose-400 font-extrabold animate-pulse">INCOMING EMERGENCY CALL</div>
+            <div class="text-base font-bold text-white mt-0.5">Civil Defense Emergency Line</div>
+            <div class="text-xs font-mono text-slate-300 mt-0.5">+1 (800) 555-0199 (Toll-Free)</div>
+            <div class="text-[11px] text-slate-400 mt-2">Calling Citizen Mobile: <span id="robocall-target-phone" class="font-mono text-white font-bold">+19876543210</span></div>
+          </div>
+
+          <div class="flex gap-3 justify-center pt-2">
+            <button 
+              type="button" 
+              onclick="answerRobocall()" 
+              class="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition-all">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span>Accept &amp; Answer Call</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="closeRobocallModal()" 
+              class="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold">
+              Decline
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: In-Call Voice Prompt & DTMF Keypad Screen -->
+        <div id="robocall-step-active" class="space-y-4 hidden">
+          <!-- Call Status Header -->
+          <div class="p-3 bg-slate-900 rounded-2xl border border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="font-bold text-white">Call Connected</span>
+              <span id="robocall-timer" class="font-mono text-slate-400 text-[11px]">00:08</span>
+            </div>
+            <span class="text-[10px] text-rose-400 font-mono font-bold uppercase">Twilio Voice Active</span>
+          </div>
+
+          <!-- Spoken Advisory Transcript Box -->
+          <div class="p-3.5 bg-slate-950 rounded-2xl border border-rose-500/40 text-xs space-y-1.5">
+            <div class="text-[10px] uppercase font-bold text-rose-400 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              <span>Live Voice Audio Prompt (Polly.Joanna)</span>
+            </div>
+            <p id="robocall-speech-text" class="text-slate-200 text-xs italic leading-relaxed">
+              "URGENT DISASTER ADVISORY from Civil Defense: Coastal Cyclone &amp; Storm Surge Alert (Ward 14). Severe flooding detected. Press 1 if you are safe. Press 2 immediately if you require emergency evacuation and rescue."
+            </p>
+          </div>
+
+          <!-- Interactive DTMF Keypad Buttons -->
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold text-slate-400">Citizen Keypad DTMF Response Options:</div>
+            <div class="grid grid-cols-2 gap-3">
+              <button 
+                type="button" 
+                onclick="pressRobocallDtmf('1')" 
+                class="p-4 rounded-2xl bg-emerald-950/80 hover:bg-emerald-900/90 border-2 border-emerald-500/60 text-left transition-all group shadow-lg shadow-emerald-950/50">
+                <div class="text-2xl font-mono font-extrabold text-emerald-400 group-hover:scale-110 transition-transform">1</div>
+                <div class="text-xs font-bold text-white mt-1">Press 1: I am Safe</div>
+                <div class="text-[10px] text-emerald-300 mt-0.5">Logs citizen as safe in registry</div>
+              </button>
+              <button 
+                type="button" 
+                onclick="pressRobocallDtmf('2')" 
+                class="p-4 rounded-2xl bg-rose-950/90 hover:bg-rose-900 border-2 border-rose-500 text-left transition-all group shadow-xl shadow-rose-950/60 animate-pulse">
+                <div class="text-2xl font-mono font-extrabold text-rose-400 group-hover:scale-110 transition-transform">2</div>
+                <div class="text-xs font-bold text-white mt-1">Press 2: 🚨 Request SOS Rescue</div>
+                <div class="text-[10px] text-rose-300 mt-0.5">Dispatches NDRF rescue unit immediately</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Call Disposition & Result -->
+        <div id="robocall-step-result" class="space-y-4 hidden">
+          <div id="robocall-result-banner" class="p-4 rounded-2xl border text-center space-y-1">
+            <div id="robocall-result-icon" class="text-2xl">✓</div>
+            <div id="robocall-result-title" class="text-sm font-bold text-white">Status Logged</div>
+            <p id="robocall-result-desc" class="text-xs text-slate-300">Feedback description</p>
+          </div>
+
+          <div id="robocall-sos-docket-box" class="p-3 bg-slate-900 rounded-2xl border border-rose-500/40 space-y-1 text-xs hidden">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Emergency Rescue Docket:</span>
+              <span id="robocall-sos-ticket-id" class="font-mono font-bold text-amber-300">SOS-XXXX</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Assigned Rescue Division:</span>
+              <span class="font-bold text-white">Disaster Management &amp; Rescue Command</span>
+            </div>
+            <div class="text-[10px] text-teal-300 pt-1 border-t border-slate-800">
+              ✓ Priority Twilio SMS confirmation dispatched to citizen's mobile.
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button 
+              type="button" 
+              onclick="quickSwitchUser('+18005550199'); closeRobocallModal();" 
+              class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">
+              🏛️ View in Disaster Rescue Desk
+            </button>
+            <button 
+              type="button" 
+              onclick="closeRobocallModal()" 
+              class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 9. PHYSICAL QR CODE & DIGITAL SEAL VERIFIER MODAL         -->
+  <!-- ========================================================= -->
+  <div id="qr-verify-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl text-slate-800 border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Modal Header -->
+      <div class="bg-[#1e293b] text-white p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-md">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+          </div>
+          <div>
+            <div class="text-[10px] uppercase tracking-wider text-emerald-300 font-bold">Government Trust &amp; Anti-Fraud Engine</div>
+            <h3 class="text-sm font-bold text-white">Physical QR Code &amp; Seal Verifier</h3>
+          </div>
+        </div>
+        <button onclick="closeQrVerifyModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
+        <button onclick="switchQrTab('camera')" id="qr-tab-camera" class="flex-1 py-3 px-4 text-center border-b-2 border-emerald-600 text-emerald-700 font-bold transition-all flex items-center justify-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>📷 Camera Scanner</span>
+        </button>
+        <button onclick="switchQrTab('upload')" id="qr-tab-upload" class="flex-1 py-3 px-4 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>📁 Upload / Drag QR</span>
+        </button>
+        <button onclick="switchQrTab('presets')" id="qr-tab-presets" class="flex-1 py-3 px-4 text-center border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>🧪 1-Click Test Seals</span>
+        </button>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="p-6 overflow-y-auto flex-1 space-y-4">
+        
+        <!-- Tab 1: Camera Scanner -->
+        <div id="qr-panel-camera" class="space-y-3">
+          <div class="relative w-full aspect-video bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-300">
+            <video id="qr-video" class="w-full h-full object-cover hidden" playsinline></video>
+            <canvas id="qr-canvas" class="hidden"></canvas>
+            <div id="qr-camera-placeholder" class="text-center p-6 text-slate-400">
+              <svg class="w-12 h-12 mx-auto text-slate-500 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p class="text-xs">Hold physical printed receipt or phone screen in front of camera</p>
+              <button type="button" onclick="startQrCameraScan()" class="mt-3 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md">
+                Start Web Camera
+              </button>
+            </div>
+            <!-- Scanning Reticle Overlay -->
+            <div id="qr-scanner-reticle" class="absolute inset-8 border-2 border-emerald-400/80 rounded-2xl pointer-events-none hidden">
+              <div class="w-full h-0.5 bg-emerald-400 animate-bounce mt-4 shadow-sm shadow-emerald-400"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Upload Image -->
+        <div id="qr-panel-upload" class="space-y-3 hidden">
+          <div 
+            id="qr-dropzone" 
+            onclick="document.getElementById('qr-file-input').click()"
+            class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50 hover:bg-emerald-50/30 transition-colors">
+            <svg class="w-10 h-10 mx-auto text-slate-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            <div class="text-xs font-bold text-slate-700">Click to upload or Drag &amp; Drop QR Image / Receipt</div>
+            <div class="text-[10px] text-slate-400 mt-1">PNG, JPG, or SVG containing a valid Government Seal QR</div>
+            <input type="file" id="qr-file-input" accept="image/*" class="hidden" onchange="handleQrFileInput(event)">
+          </div>
+        </div>
+
+        <!-- Tab 3: 1-Click Test Presets -->
+        <div id="qr-panel-presets" class="space-y-2.5 hidden">
+          <div class="text-xs font-bold text-slate-700">Select a verified government seal to test cryptographic integrity:</div>
+          <div class="grid grid-cols-1 gap-2 text-xs">
+            <button 
+              type="button" 
+              onclick="testPresetSeal(0)" 
+              class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-500/60 text-left transition-all flex items-center justify-between">
+              <div>
+                <div class="font-bold text-slate-900">🏛️ Property Tax Clearance (Receipt #PTX-2026-9812)</div>
+                <div class="font-mono text-[10px] text-emerald-700 mt-0.5">Seal: SEAL-MUNI-98214-SHA256</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Test Valid</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="testPresetSeal(1)" 
+              class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-500/60 text-left transition-all flex items-center justify-between">
+              <div>
+                <div class="font-bold text-slate-900">🚗 Driving License Renewal Slip (DL-1420260089)</div>
+                <div class="font-mono text-[10px] text-emerald-700 mt-0.5">Seal: SEAL-RTO-55210-SHA256</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Test Valid</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="testPresetSeal(2)" 
+              class="p-3 rounded-xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-500/60 text-left transition-all flex items-center justify-between">
+              <div>
+                <div class="font-bold text-slate-900">👵 Senior Citizen Pension Deposit Slip</div>
+                <div class="font-mono text-[10px] text-emerald-700 mt-0.5">Seal: SEAL-DBT-88120-SHA256</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">Test Valid</span>
+            </button>
+            <button 
+              type="button" 
+              onclick="testPresetSeal(4)" 
+              class="p-3 rounded-xl bg-rose-50/60 hover:bg-rose-100/60 border border-rose-300 text-left transition-all flex items-center justify-between">
+              <div>
+                <div class="font-bold text-rose-900">❌ Counterfeit / Altered Seal (Fraud Simulation)</div>
+                <div class="font-mono text-[10px] text-rose-700 mt-0.5">Seal: SEAL-FORGED-FAKE-00000</div>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-200 text-rose-900">Test Tampered</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Verification Result Card -->
+        <div id="qr-result-box" class="hidden rounded-2xl p-4 border text-xs space-y-3 transition-all">
+          <!-- Injected via displayVerificationResult() -->
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+        <span class="text-slate-500 text-[11px]">SHA-256 Ledger Verification</span>
+        <button type="button" onclick="closeQrVerifyModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 8. TWO-WAY CITIZEN SMS BRIDGE KEYPAD SIMULATOR MODAL      -->
+  <!-- ========================================================= -->
+  <div id="sms-bridge-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-[#131722] border border-teal-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-white max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-lg shadow-teal-600/30">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Two-Way SMS Threading Bridge</span>
+              <span class="px-2 py-0.2 rounded-full text-[9px] bg-teal-500/20 text-teal-300 border border-teal-500/30 font-mono font-bold">Keypad Phone</span>
+            </h3>
+            <p class="text-[11px] text-teal-300">Basic Feature Phone SMS Simulation</p>
+          </div>
+        </div>
+        <button onclick="closeSmsBridgeModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Citizen Benefit Context -->
+      <div class="my-4 p-3 rounded-2xl bg-teal-950/60 border border-teal-800/60 text-xs text-teal-200 leading-normal">
+        <strong class="text-white">Citizen Benefit:</strong> Non-smartphone citizens without internet or data can reply to grievance tickets directly from their basic keypad phone by sending standard SMS texts. Messages auto-thread into PhoneMail in real time.
+      </div>
+
+      <form id="sms-bridge-form" onsubmit="handleSimulatedSmsSubmit(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Citizen Sender Phone (Keypad / Feature Phone)</label>
+          <input 
+            type="tel" 
+            id="sms-sim-phone" 
+            value="+19876543210" 
+            required
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Target Grievance Docket (Optional Prefix)</label>
+          <input 
+            type="text" 
+            id="sms-sim-ticket" 
+            placeholder="e.g. TKT-2026-2427 (leave blank to auto-thread latest ticket)" 
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-teal-500"
+          />
+          <p class="text-[10px] text-slate-400 mt-1">Leave blank to auto-associate with citizen's most recent active ticket, or type a new grievance.</p>
+        </div>
+
+        <!-- Quick Sample SMS Messages -->
+        <div class="space-y-1">
+          <div class="text-[11px] font-semibold text-slate-400">Quick Keypad SMS Templates:</div>
+          <div class="flex flex-col gap-1.5 text-[11px]">
+            <button 
+              type="button" 
+              onclick="setSmsPreset('The pipeline burst is right in front of the community center. Water pressure is zero.')" 
+              class="text-left px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 truncate">
+              💬 "The pipeline burst is right in front of the community center..."
+            </button>
+            <button 
+              type="button" 
+              onclick="setSmsPreset('Water repair team arrived, work is currently underway. Thank you for prompt response.')" 
+              class="text-left px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 truncate">
+              💬 "Water repair team arrived, work is currently underway..."
+            </button>
+            <button 
+              type="button" 
+              onclick="setSmsPreset('New Complaint: Streetlight on pole #14 has been broken for 5 days. Urgent.')" 
+              class="text-left px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 truncate">
+              💬 "New Complaint: Streetlight on pole #14 has been broken..."
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Incoming SMS Text Body</label>
+          <textarea 
+            id="sms-sim-body" 
+            rows="3" 
+            required
+            class="w-full bg-slate-950 border border-teal-500/60 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-teal-400 font-mono"
+            placeholder="Type SMS text..."
+          >The pipeline burst is right in front of the community center. Water pressure is zero.</textarea>
+        </div>
+
+        <button 
+          id="btn-send-sim-sms"
+          type="submit" 
+          class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-teal-600/30 transition-all">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span>Dispatch Inbound SMS from Citizen Phone</span>
+        </button>
+      </form>
+
+      <!-- SMS Delivery Output / Live Keypad Screen -->
+      <div id="sms-bridge-output" class="mt-4 p-3 bg-slate-950 rounded-2xl border border-slate-800 hidden space-y-2 text-xs">
+        <div class="flex items-center justify-between text-[11px] text-teal-400 font-bold">
+          <span>✓ Twilio Inbound SMS Processed &amp; Threaded</span>
+          <span id="sms-output-ticket" class="font-mono">TKT-XXXX</span>
+        </div>
+        <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-200">
+          <div class="text-[9px] uppercase tracking-wider text-slate-400 mb-1">Automated Twilio SMS Receipt to Citizen:</div>
+          <div id="sms-output-receipt" class="italic text-teal-300 font-sans">"..."</div>
+        </div>
+        <div class="flex gap-2 pt-1">
+          <button 
+            type="button" 
+            onclick="quickSwitchUser('+18005550199'); closeSmsBridgeModal();" 
+            class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M4 22V11M20 22V11M10 22V11M14 22V11M2 11l10-7 10 7M12 2v2"/></svg>
+            <span>View in Department Inbox</span>
+          </button>
+          <button 
+            type="button" 
+            onclick="closeSmsBridgeModal()" 
+            class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold">
+            Done
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 9. SETTINGS & PREFERENCES MODAL (THEMES, SPEECH, VIEWS)   -->
+  <!-- ========================================================= -->
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-[#131722] border border-slate-700/80 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl text-white max-h-[90vh] overflow-y-auto space-y-4">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white" data-i18n="settings_title">Platform Settings &amp; Language</h3>
+            <p class="text-[11px] text-slate-400" data-i18n="display_lang_desc">Themes, Universal Multi-Language AI Translation &amp; Voice</p>
+          </div>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Theme Selection (3 Curated Themes) -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-300" data-i18n="settings_theme_label">Choose Visual Theme</label>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button 
+            type="button" 
+            onclick="applyTheme('slate')" 
+            data-theme-btn="slate"
+            class="p-3 rounded-2xl border text-center transition-all bg-slate-900 border-blue-500 text-white font-bold shadow-md">
+            <div class="w-5 h-5 mx-auto mb-1.5 rounded-full bg-blue-500 border border-white"></div>
+            <div data-i18n="theme_slate">Classic Slate</div>
+            <div class="text-[10px] text-slate-400 font-normal mt-0.5" data-i18n="theme_slate_sub">Light Workspace</div>
+          </button>
+          <button 
+            type="button" 
+            onclick="applyTheme('midnight')" 
+            data-theme-btn="midnight"
+            class="p-3 rounded-2xl border text-center transition-all bg-slate-900 border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white">
+            <div class="w-5 h-5 mx-auto mb-1.5 rounded-full bg-[#070a0f] border border-cyan-400"></div>
+            <div data-i18n="theme_midnight">Midnight OLED</div>
+            <div class="text-[10px] text-slate-400 font-normal mt-0.5" data-i18n="theme_midnight_sub">Cyber Dark</div>
+          </button>
+          <button 
+            type="button" 
+            onclick="applyTheme('emerald')" 
+            data-theme-btn="emerald"
+            class="p-3 rounded-2xl border text-center transition-all bg-slate-900 border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white">
+            <div class="w-5 h-5 mx-auto mb-1.5 rounded-full bg-[#059669] border border-amber-400"></div>
+            <div data-i18n="theme_emerald">Emerald Civic</div>
+            <div class="text-[10px] text-slate-400 font-normal mt-0.5" data-i18n="theme_emerald_sub">Forest &amp; Gold</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Display & AI Translation Language -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300" data-i18n="settings_lang_label">Display &amp; AI Translation Language</label>
+        <select 
+          id="settings-display-lang" 
+          onchange="setAppLanguage(this.value)"
+          class="app-lang-select audio-lang-select w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer">
+          <option value="en">English (Global Baseline)</option>
+          <option value="ta">Tamil (தமிழ்)</option>
+          <option value="hi">Hindi (हिंदी)</option>
+          <option value="te">Telugu (తెలుగు)</option>
+          <option value="kn">Kannada (ಕನ್ನಡ)</option>
+          <option value="ml">Malayalam (മലയാളം)</option>
+          <option value="bn">Bengali (বাংলা)</option>
+          <option value="mr">Marathi (मराठी)</option>
+          <option value="gu">Gujarati (ગુજરાતી)</option>
+          <option value="es">Spanish (Español)</option>
+          <option value="fr">French (Français)</option>
+        </select>
+        <p class="text-[10px] text-slate-400" data-i18n="settings_lang_desc">All interface texts, menus, and incoming citizen notices are translated automatically using AI.</p>
+      </div>
+
+      <!-- Speech Speed -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300" data-i18n="settings_speed_label">Speech Audio Speed</label>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button type="button" onclick="setSpeechSpeed(0.8)" data-speed-btn="0.8" class="py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-center" data-i18n="speed_slow">0.8x Slow</button>
+          <button type="button" onclick="setSpeechSpeed(1.0)" data-speed-btn="1.0" class="py-2 rounded-xl bg-blue-600 text-white font-bold text-center" data-i18n="speed_normal">1.0x Normal</button>
+          <button type="button" onclick="setSpeechSpeed(1.2)" data-speed-btn="1.2" class="py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-center" data-i18n="speed_fast">1.2x Fast</button>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <div class="pt-2 border-t border-slate-800 flex justify-end">
+        <button 
+          type="button" 
+          onclick="closeSettingsModal()" 
+          class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md"
+          data-i18n="save_close">
+          Save &amp; Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="/js/vendor/jsQR.js"></script>
+  <script src="/js/icons.js?v=20260930"></script>
+  <script src="/js/i18n.js?v=20260930"></script>
+  <script src="/js/app.js?v=20260930"></script>
+</body>
+</html>

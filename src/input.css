@@ -1,0 +1,315 @@
+@import "tailwindcss";
+@source "../public";
+
+@layer base {
+  body {
+    @apply antialiased bg-slate-100 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hide scrollbar utility for clean mobile chip scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Dynamic Viewport Safe Height */
+@supports (height: 100dvh) {
+  .h-screen-dvh {
+    height: 100dvh !important;
+  }
+}
+
+/* macOS Window Control Dots */
+.mac-dot-red {
+  background-color: #ff5f56;
+}
+.mac-dot-yellow {
+  background-color: #ffbd2e;
+}
+.mac-dot-green {
+  background-color: #27c93f;
+}
+
+/* Sidebar Dark Styling matching Image 1 */
+.sidebar-bg {
+  background-color: #1a1e23;
+  color: #94a3b8;
+}
+.sidebar-nav-active {
+  background-color: #272c34;
+  color: #ffffff;
+  font-weight: 600;
+}
+.sidebar-nav-hover:hover {
+  background-color: #22262c;
+  color: #e2e8f0;
+}
+
+/* Collapsible Desktop Sidebar Styles */
+#desktop-sidebar {
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsed {
+  width: 4.5rem !important; /* 72px icon rail */
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+.sidebar-collapsed .sidebar-hide-on-collapse {
+  display: none !important;
+}
+
+.sidebar-collapsed .sidebar-icon-center {
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  text-align: center !important;
+}
+
+.sidebar-collapsed .sidebar-compose-btn {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  justify-content: center !important;
+  border-radius: 9999px !important;
+  width: 3rem !important;
+  height: 3rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Unread Indicator Dot */
+.unread-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: #2563eb;
+  flex-shrink: 0;
+}
+
+/* Label Badges matching Image 1 & 2 */
+.label-college {
+  background-color: #3b82f6;
+}
+.label-projects {
+  background-color: #22c55e;
+}
+.label-personal {
+  background-color: #ef4444;
+}
+.label-purchases {
+  background-color: #f59e0b;
+}
+.label-finance {
+  background-color: #a855f7;
+}
+
+/* Reading Pane Content Card */
+.key-points-card {
+  background-color: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* Mobile Frame & Transitions */
+.mobile-slide-drawer {
+  transition: transform 0.25s ease-in-out;
+}
+
+/* Bottom Sheet Animation for Tools */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========================================================= */
+/* 3 CURATED THEMES: SLATE, MIDNIGHT OLED, EMERALD CIVIC    */
+/* ========================================================= */
+
+/* Theme 1: Default Classic Slate (Light / Pro Blue) */
+[data-theme="slate"] {
+  --theme-bg-main: #f1f5f9;
+  --theme-bg-panel: #ffffff;
+  --theme-border: #eaedf2;
+  --theme-text-main: #0f172a;
+  --theme-text-muted: #64748b;
+}
+
+/* Theme 2: Midnight OLED / Cyber Dark */
+[data-theme="midnight"] body {
+  background-color: #070a0f !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="midnight"] #desktop-view-container {
+  background-color: #0b0f17 !important;
+}
+
+[data-theme="midnight"] #desktop-sidebar {
+  background-color: #070a0f !important;
+  border-right: 1px solid #1e293b !important;
+}
+
+[data-theme="midnight"] #desktop-mail-column {
+  background-color: #0b0f17 !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="midnight"] #desktop-mail-list {
+  background-color: #0b0f17 !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="midnight"] #desktop-mail-list > div {
+  border-color: #1a2234 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="midnight"] #desktop-mail-list > div:hover {
+  background-color: #131c2e !important;
+}
+
+[data-theme="midnight"] #desktop-mail-list > div.bg-\[\#eef3fc\] {
+  background-color: #1e293b !important;
+}
+
+[data-theme="midnight"] #desktop-mail-list span.text-slate-900,
+[data-theme="midnight"] #desktop-mail-list div.text-slate-900 {
+  color: #f8fafc !important;
+}
+
+[data-theme="midnight"] #desktop-reading-pane {
+  background-color: #0d131f !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="midnight"] #desktop-reading-pane > div:first-child {
+  background-color: #0d131f !important;
+  border-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="midnight"] #desktop-reading-pane h1 {
+  color: #f8fafc !important;
+}
+
+[data-theme="midnight"] #desktop-reading-pane p {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="midnight"] .key-points-card {
+  background-color: #161f30 !important;
+  border-color: #27354f !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="midnight"] .bg-\[\#f1f3f4\] {
+  background-color: #161f30 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="midnight"] #mobile-screen-inbox,
+[data-theme="midnight"] #mobile-screen-detail,
+[data-theme="midnight"] #mobile-screen-search {
+  background-color: #0b0f17 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="midnight"] #mobile-screen-inbox > div:first-child,
+[data-theme="midnight"] #mobile-screen-inbox > div.h-14 {
+  background-color: #070a0f !important;
+  border-color: #1e293b !important;
+}
+
+/* Theme 3: Emerald Civic / Luxury Forest */
+[data-theme="emerald"] body {
+  background-color: #041c14 !important;
+  color: #064e3b !important;
+}
+
+[data-theme="emerald"] #desktop-view-container {
+  background-color: #fbfdfa !important;
+}
+
+[data-theme="emerald"] #desktop-sidebar {
+  background-color: #042117 !important;
+  border-right: 1px solid #064e3b !important;
+}
+
+[data-theme="emerald"] #desktop-sidebar .sidebar-compose-btn {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="emerald"] #desktop-sidebar .sidebar-compose-btn:hover {
+  background-color: #047857 !important;
+}
+
+[data-theme="emerald"] #desktop-mail-column {
+  background-color: #f7faf8 !important;
+  border-color: #d1fae5 !important;
+}
+
+[data-theme="emerald"] #desktop-mail-list {
+  background-color: #f7faf8 !important;
+}
+
+[data-theme="emerald"] #desktop-mail-list > div {
+  border-color: #e6f4ea !important;
+}
+
+[data-theme="emerald"] #desktop-mail-list > div:hover {
+  background-color: #ecfdf5 !important;
+}
+
+[data-theme="emerald"] #desktop-mail-list > div.bg-\[\#eef3fc\] {
+  background-color: #d1fae5 !important;
+}
+
+[data-theme="emerald"] #desktop-reading-pane {
+  background-color: #ffffff !important;
+}
+
+[data-theme="emerald"] #desktop-reading-pane > div:first-child {
+  border-color: #d1fae5 !important;
+}
+
+[data-theme="emerald"] #desktop-reading-pane h1 {
+  color: #064e3b !important;
+}
+
+[data-theme="emerald"] .key-points-card {
+  background-color: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+  color: #14532d !important;
+}

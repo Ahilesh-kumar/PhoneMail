@@ -1,0 +1,42 @@
+# Environment and Secret files (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQLite Database and runtime files
+data/*.sqlite*
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary and Scratch test files
+scratch/
+.temp/
+tmp/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+dist/
+coverage/

@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+yarn-error.log
+.git
+.github
+.env
+data/*.sqlite*
+scratch/
+*.png
+*.webp
+.DS_Store
+Thumbs.db
