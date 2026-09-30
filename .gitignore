@@ -1,6 +1,9 @@
 # Environment and Secret files (NEVER COMMIT)
 .env
 .env.*
+env.txt
+auth_keys*
+submission_files/
 !.env.example
 
 # Node dependencies
