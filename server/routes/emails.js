@@ -10,6 +10,8 @@ import {
   updateEmailLabel,
   getFolderCounts,
   findOrCreateUser,
+  getUserByIdentifier,
+  getUserByPhone,
   normalizePhone,
   phoneToEmail,
   createGrievanceTicket,
@@ -32,10 +34,11 @@ const router = express.Router();
 
 function getRequestUser(req) {
   return (
-    req.cookies?.phonemail_user ||
-    req.headers['x-user-phone'] ||
     req.query.user ||
-    req.body.userPhone
+    req.headers['x-user-phone'] ||
+    req.body.userPhone ||
+    req.body.sender ||
+    req.cookies?.phonemail_user
   );
 }
 
@@ -72,8 +75,35 @@ router.post('/send', async (req, res) => {
     return res.status(400).json({ error: 'Message body cannot be empty.' });
   }
 
-  const normSender = normalizePhone(activeSender);
-  const normRecipient = normalizePhone(recipient.replace(/@phonemail\.com/i, ''));
+  const senderUser = getUserByPhone(normalizePhone(activeSender)) || getUserByIdentifier(activeSender);
+  const normSender = senderUser ? senderUser.phone_number : (normalizePhone(activeSender) || activeSender);
+  const resolvedSenderName = sender_name || senderUser?.name || normSender;
+
+  // Resolve recipient flexibly (phone, email, name, or badge ID)
+  const cleanRecipient = recipient.trim();
+  let normRecipient = '';
+  let resolvedRecipientName = '';
+
+  const matchedRecipient = getUserByIdentifier(cleanRecipient) || getUserByPhone(normalizePhone(cleanRecipient.replace(/@phonemail\.com/i, '')));
+  if (matchedRecipient) {
+    normRecipient = matchedRecipient.phone_number;
+    resolvedRecipientName = matchedRecipient.name || matchedRecipient.phone_number;
+  } else {
+    const candidatePhone = normalizePhone(cleanRecipient.replace(/@phonemail\.com/i, ''));
+    if (candidatePhone && candidatePhone.length >= 8) {
+      normRecipient = candidatePhone;
+      resolvedRecipientName = candidatePhone;
+    } else {
+      const userByName = db.prepare('SELECT * FROM users WHERE LOWER(name) = LOWER(?) OR LOWER(name) LIKE ? LIMIT 1').get(cleanRecipient, `%${cleanRecipient.toLowerCase()}%`);
+      if (userByName) {
+        normRecipient = userByName.phone_number;
+        resolvedRecipientName = userByName.name;
+      } else {
+        normRecipient = candidatePhone || cleanRecipient;
+        resolvedRecipientName = cleanRecipient;
+      }
+    }
+  }
 
   // Detect whether recipient is a Civic/Gov Department or citizen grievance
   const isCivicGrievance = 
@@ -116,20 +146,22 @@ router.post('/send', async (req, res) => {
   // Detect Government Verified Sender
   const isGovVerified = 
     normSender.includes('5551000') ||
-    (sender_name && sender_name.toLowerCase().includes('govt')) ||
-    (sender_name && sender_name.toLowerCase().includes('department')) ||
-    (sender_name && sender_name.toLowerCase().includes('kpr institute')) ||
-    (sender_name && sender_name.toLowerCase().includes('civic'));
+    (resolvedSenderName && resolvedSenderName.toLowerCase().includes('govt')) ||
+    (resolvedSenderName && resolvedSenderName.toLowerCase().includes('department')) ||
+    (resolvedSenderName && resolvedSenderName.toLowerCase().includes('kpr institute')) ||
+    (resolvedSenderName && resolvedSenderName.toLowerCase().includes('civic'));
 
   // Ensure recipient user exists in database
-  findOrCreateUser(normRecipient, normRecipient, 'auto_receive');
+  if (normRecipient) {
+    findOrCreateUser(normRecipient, resolvedRecipientName || normRecipient, 'auto_receive');
+  }
 
   // Insert email into SQLite
   const email = createEmail({
     sender: normSender,
-    sender_name: sender_name || normSender,
+    sender_name: resolvedSenderName,
     recipient: normRecipient,
-    recipient_name: normRecipient,
+    recipient_name: resolvedRecipientName || normRecipient,
     subject: subject.trim(),
     body: body.trim(),
     folder: 'inbox',

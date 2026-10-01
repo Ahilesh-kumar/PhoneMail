@@ -478,7 +478,9 @@ async function fetchEmails() {
       params.append('search', state.searchQuery);
     }
 
-    const res = await fetch(`/api/emails?${params.toString()}`);
+    const res = await fetch(`/api/emails?${params.toString()}`, {
+      headers: { 'x-user-phone': state.currentUser.phone_number }
+    });
     const data = await res.json();
     state.emails = data.emails || [];
 
@@ -507,7 +509,9 @@ async function fetchEmails() {
 async function fetchCounts() {
   if (!state.currentUser) return;
   try {
-    const res = await fetch(`/api/emails/counts?user=${encodeURIComponent(state.currentUser.phone_number)}`);
+    const res = await fetch(`/api/emails/counts?user=${encodeURIComponent(state.currentUser.phone_number)}`, {
+      headers: { 'x-user-phone': state.currentUser.phone_number }
+    });
     const data = await res.json();
     state.counts = data;
   } catch (err) {
@@ -2327,7 +2331,10 @@ async function handleComposeSubmit(e) {
   try {
     const res = await fetch('/api/emails/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-user-phone': state.currentUser.phone_number 
+      },
       body: JSON.stringify({
         sender: state.currentUser.phone_number,
         sender_name: state.currentUser.name,
@@ -2635,7 +2642,9 @@ function openProfileMenu(event) {
     { label: email, icon: icons.mail('w-4 h-4 text-slate-400') },
     { divider: true },
     { header: 'Switch Profile' },
-    { label: 'Citizen Portal (Elena Rostova)', icon: icons.phone('w-4 h-4 text-emerald-600'), action: () => quickSwitchUser('+19876543210') },
+    { label: 'Citizen (+919943974225)', icon: icons.phone('w-4 h-4 text-emerald-600'), action: () => quickSwitchUser('+919943974225') },
+    { label: 'Citizen (+919655802712)', icon: icons.phone('w-4 h-4 text-emerald-600'), action: () => quickSwitchUser('+919655802712') },
+    { label: 'Citizen (Elena Rostova)', icon: icons.phone('w-4 h-4 text-emerald-600'), action: () => quickSwitchUser('+19876543210') },
     { label: 'Civic Grievance Dept (+18005550199)', icon: icons.landmark('w-4 h-4 text-indigo-600'), action: () => quickSwitchUser('+18005550199') },
     { label: 'Emergency Dispatch Cell (+18005550198)', icon: icons.alert('w-4 h-4 text-amber-500'), action: () => quickSwitchUser('+18005550198') },
     { label: 'Open Auth Gateway / Sign In', icon: icons.user('w-4 h-4 text-blue-600'), action: () => openAuthModal() },
@@ -3081,17 +3090,31 @@ window.closeSettingsModal = closeSettingsModal;
 
 async function quickSwitchUser(phoneNumber) {
   try {
-    const res = await fetch(`/api/auth/me?phone=${encodeURIComponent(phoneNumber)}`);
+    const res = await fetch('/api/auth/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phoneNumber })
+    });
     const data = await res.json();
-    if (data.authenticated && data.user) {
+    if (data.success && data.user) {
       state.currentUser = data.user;
       localStorage.setItem('phonemail_active_phone', data.user.phone_number);
       closeAuthModal();
       await refreshMailbox();
       showNotificationToast(`Switched account to: ${data.user.name || data.user.phone_number}`);
     } else {
-      localStorage.setItem('phonemail_active_phone', phoneNumber);
-      location.reload();
+      const fallbackRes = await fetch(`/api/auth/me?phone=${encodeURIComponent(phoneNumber)}`);
+      const fallbackData = await fallbackRes.json();
+      if (fallbackData.authenticated && fallbackData.user) {
+        state.currentUser = fallbackData.user;
+        localStorage.setItem('phonemail_active_phone', fallbackData.user.phone_number);
+        closeAuthModal();
+        await refreshMailbox();
+        showNotificationToast(`Switched account to: ${fallbackData.user.name || fallbackData.user.phone_number}`);
+      } else {
+        localStorage.setItem('phonemail_active_phone', phoneNumber);
+        location.reload();
+      }
     }
   } catch (e) {
     console.error(e);

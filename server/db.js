@@ -195,6 +195,7 @@ export function initDatabase() {
       db.exec("ALTER TABLE emails ADD COLUMN is_broadcast INTEGER NOT NULL DEFAULT 0");
     }
     db.exec("CREATE INDEX IF NOT EXISTS idx_emails_ticket ON emails(ticket_id)");
+    db.exec("DELETE FROM users WHERE phone_number IS NULL OR TRIM(phone_number) = ''");
   } catch (e) {}
 
   // Ensure Department Helpline official account exists (+18005550199)
@@ -442,12 +443,22 @@ export function getUserByPhone(phoneNumber) {
 
 export function getUserByIdentifier(identifier) {
   if (!identifier) return null;
-  const clean = identifier.trim();
+  const clean = identifier.toString().trim();
   const normalized = normalizePhone(clean);
+  const withoutDomain = clean.replace(/@phonemail\.com/i, '').trim();
+  const withDomain = withoutDomain.includes('@') ? withoutDomain : `${withoutDomain}@phonemail.com`;
+
   return db.prepare(`
     SELECT * FROM users 
-    WHERE phone_number = ? OR phone_number = ? OR LOWER(email) = LOWER(?) OR UPPER(COALESCE(employee_id, '')) = UPPER(?)
-  `).get(clean, normalized, clean, clean);
+    WHERE phone_number = ? 
+       OR phone_number = ? 
+       OR phone_number = ?
+       OR LOWER(email) = LOWER(?) 
+       OR LOWER(email) = LOWER(?)
+       OR LOWER(name) = LOWER(?)
+       OR UPPER(COALESCE(employee_id, '')) = UPPER(?)
+    LIMIT 1
+  `).get(clean, normalized, withoutDomain, clean, withDomain, clean, clean);
 }
 
 export function createOfficialUser({ phone, name, email, department, designation, employeeId, password }) {
@@ -568,6 +579,35 @@ export function getEmailById(id) {
   return formatEmailRow(row);
 }
 
+export function getUserMatchIdentifiers(userIdentifier) {
+  if (!userIdentifier) return [];
+  const raw = userIdentifier.toString().trim();
+  const normalized = normalizePhone(raw);
+  const digits = raw.replace(/[^0-9]/g, '');
+  const emailAddr = normalized ? phoneToEmail(normalized) : '';
+
+  const ids = new Set();
+  if (raw) ids.add(raw);
+  if (normalized) ids.add(normalized);
+  if (digits) {
+    ids.add(digits);
+    ids.add(`+${digits}`);
+    ids.add(`${digits}@phonemail.com`);
+  }
+  if (emailAddr) ids.add(emailAddr);
+
+  try {
+    const user = getUserByPhone(normalized) || getUserByIdentifier(raw);
+    if (user) {
+      if (user.phone_number) ids.add(user.phone_number);
+      if (user.email) ids.add(user.email.toLowerCase());
+      if (user.employee_id) ids.add(user.employee_id);
+    }
+  } catch (e) {}
+
+  return Array.from(ids).filter(Boolean);
+}
+
 export function getEmailsForUser(userIdentifier, options = {}) {
   const {
     folder = 'inbox',
@@ -576,29 +616,87 @@ export function getEmailsForUser(userIdentifier, options = {}) {
     search = ''
   } = options;
 
+  const userIds = getUserMatchIdentifiers(userIdentifier);
   const normalized = normalizePhone(userIdentifier);
-  const emailAddr = phoneToEmail(normalized);
   const isDept = normalized === '+18005550199' || normalized === '18005550199' || (userIdentifier && (userIdentifier.includes('.gov') || userIdentifier.includes('civic')));
 
-  let query = `
-    SELECT * FROM emails 
-    WHERE (
-      recipient = ? OR recipient = ? OR recipient = ?
-      OR sender = ? OR sender = ? OR sender = ?
-      OR is_broadcast = 1
-      ${isDept ? "OR recipient = '+18005550199' OR recipient = '18005550199@phonemail.com' OR recipient = 'civic.complaints@city.phonemail.gov' OR label = 'Civic Grievance'" : ""}
-    )
-  `;
-  const params = [userIdentifier, normalized, emailAddr, userIdentifier, normalized, emailAddr];
+  const placeholders = userIds.map(() => '?').join(', ') || "''";
 
-  if (folder) {
-    if (folder === 'inbox') {
-      query += ` AND (folder = ? OR is_broadcast = 1)`;
-      params.push(folder);
-    } else {
-      query += ` AND folder = ?`;
-      params.push(folder);
-    }
+  let query = '';
+  let params = [];
+
+  if (folder === 'inbox') {
+    // Received emails or public broadcasts, strictly folder = 'inbox'
+    query = `
+      SELECT * FROM emails 
+      WHERE (
+        recipient IN (${placeholders})
+        OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+        ${isDept ? "OR recipient = '+18005550199' OR recipient = '18005550199@phonemail.com' OR recipient = 'civic.complaints@city.phonemail.gov' OR label = 'Civic Grievance'" : ""}
+      )
+      AND folder = 'inbox'
+    `;
+    params.push(...userIds);
+  } else if (folder === 'sent') {
+    // Sent emails: user is sender, not trashed, and not duplicate officer ticket copy
+    query = `
+      SELECT * FROM emails 
+      WHERE sender IN (${placeholders})
+      AND folder != 'trash'
+      AND (subject NOT LIKE '[TICKET #%]' OR folder = 'sent')
+    `;
+    params.push(...userIds);
+  } else if (folder === 'trash') {
+    // Trashed emails
+    query = `
+      SELECT * FROM emails 
+      WHERE (
+        recipient IN (${placeholders}) 
+        OR sender IN (${placeholders})
+        OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+        ${isDept ? "OR recipient = '+18005550199' OR label = 'Civic Grievance'" : ""}
+      )
+      AND folder = 'trash'
+    `;
+    params.push(...userIds, ...userIds);
+  } else if (folder === 'starred') {
+    // Starred emails
+    query = `
+      SELECT * FROM emails 
+      WHERE (
+        recipient IN (${placeholders}) 
+        OR sender IN (${placeholders})
+        OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+        ${isDept ? "OR recipient = '+18005550199' OR label = 'Civic Grievance'" : ""}
+      )
+      AND is_starred = 1
+      AND folder != 'trash'
+    `;
+    params.push(...userIds, ...userIds);
+  } else if (folder === 'drafts') {
+    query = `
+      SELECT * FROM emails 
+      WHERE sender IN (${placeholders})
+      AND folder = 'drafts'
+    `;
+    params.push(...userIds);
+  } else if (folder === 'spam') {
+    query = `
+      SELECT * FROM emails 
+      WHERE recipient IN (${placeholders})
+      AND folder = 'spam'
+    `;
+    params.push(...userIds);
+  } else {
+    query = `
+      SELECT * FROM emails 
+      WHERE (
+        recipient IN (${placeholders}) 
+        OR sender IN (${placeholders})
+      )
+      AND folder = ?
+    `;
+    params.push(...userIds, ...userIds, folder);
   }
 
   if (label) {
@@ -677,45 +775,99 @@ export function updateEmailLabel(id, label) {
 }
 
 export function getFolderCounts(userIdentifier) {
+  const userIds = getUserMatchIdentifiers(userIdentifier);
   const normalized = normalizePhone(userIdentifier);
-  const emailAddr = phoneToEmail(normalized);
-
   const isDept = normalized === '+18005550199' || normalized === '18005550199' || (userIdentifier && (userIdentifier.includes('.gov') || userIdentifier.includes('civic')));
+  const placeholders = userIds.map(() => '?').join(', ') || "''";
 
   const folders = ['inbox', 'starred', 'snoozed', 'sent', 'drafts', 'spam', 'trash'];
   const counts = {};
 
   for (const f of folders) {
-    if (f === 'starred') {
+    if (f === 'inbox') {
       const row = db.prepare(`
         SELECT COUNT(*) as count FROM emails 
-        WHERE (recipient = ? OR recipient = ? OR is_broadcast = 1 ${isDept ? "OR recipient = '+18005550199' OR recipient = 'civic.complaints@city.phonemail.gov' OR label = 'Civic Grievance'" : ""}) AND is_starred = 1
-      `).get(normalized, emailAddr);
-      counts[f] = row.count;
+        WHERE (
+          recipient IN (${placeholders})
+          OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+          ${isDept ? "OR recipient = '+18005550199' OR recipient = '18005550199@phonemail.com' OR recipient = 'civic.complaints@city.phonemail.gov' OR label = 'Civic Grievance'" : ""}
+        )
+        AND folder = 'inbox' AND is_read = 0
+      `).get(...userIds);
+      counts[f] = row ? row.count : 0;
+    } else if (f === 'sent') {
+      const row = db.prepare(`
+        SELECT COUNT(*) as count FROM emails 
+        WHERE sender IN (${placeholders}) AND folder != 'trash'
+        AND (subject NOT LIKE '[TICKET #%]' OR folder = 'sent')
+      `).get(...userIds);
+      counts[f] = row ? row.count : 0;
+    } else if (f === 'starred') {
+      const row = db.prepare(`
+        SELECT COUNT(*) as count FROM emails 
+        WHERE (
+          recipient IN (${placeholders}) 
+          OR sender IN (${placeholders})
+          OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+          ${isDept ? "OR recipient = '+18005550199' OR label = 'Civic Grievance'" : ""}
+        )
+        AND is_starred = 1 AND folder != 'trash'
+      `).get(...userIds, ...userIds);
+      counts[f] = row ? row.count : 0;
+    } else if (f === 'trash') {
+      const row = db.prepare(`
+        SELECT COUNT(*) as count FROM emails 
+        WHERE (
+          recipient IN (${placeholders}) 
+          OR sender IN (${placeholders})
+          OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+          ${isDept ? "OR recipient = '+18005550199' OR label = 'Civic Grievance'" : ""}
+        )
+        AND folder = 'trash'
+      `).get(...userIds, ...userIds);
+      counts[f] = row ? row.count : 0;
+    } else if (f === 'drafts') {
+      const row = db.prepare(`
+        SELECT COUNT(*) as count FROM emails 
+        WHERE sender IN (${placeholders}) AND folder = 'drafts'
+      `).get(...userIds);
+      counts[f] = row ? row.count : 0;
+    } else if (f === 'spam') {
+      const row = db.prepare(`
+        SELECT COUNT(*) as count FROM emails 
+        WHERE recipient IN (${placeholders}) AND folder = 'spam' AND is_read = 0
+      `).get(...userIds);
+      counts[f] = row ? row.count : 0;
     } else {
       const row = db.prepare(`
         SELECT COUNT(*) as count FROM emails 
-        WHERE (recipient = ? OR recipient = ? OR is_broadcast = 1 ${isDept ? "OR recipient = '+18005550199' OR recipient = 'civic.complaints@city.phonemail.gov' OR label = 'Civic Grievance'" : ""}) AND folder = ? AND is_read = 0
-      `).get(normalized, emailAddr, f);
-      counts[f] = row.count;
+        WHERE (recipient IN (${placeholders}) OR sender IN (${placeholders})) AND folder = ? AND is_read = 0
+      `).get(...userIds, ...userIds, f);
+      counts[f] = row ? row.count : 0;
     }
   }
 
-  // Label counts (College, Projects, Personal, Purchases, Finance, Govt Receipts, Civic Grievance)
+  // Label counts
   const labels = ['College', 'Projects', 'Personal', 'Purchases', 'Finance', 'Govt Receipts', 'Civic Grievance'];
   const labelCounts = {};
   for (const l of labels) {
     const row = db.prepare(`
       SELECT COUNT(*) as count FROM emails 
-      WHERE (recipient = ? OR recipient = ? OR is_broadcast = 1 ${isDept ? "OR recipient = '+18005550199' OR recipient = 'civic.complaints@city.phonemail.gov'" : ""}) AND label = ?
-    `).get(normalized, emailAddr, l);
-    labelCounts[l] = row.count;
+      WHERE (
+        recipient IN (${placeholders}) 
+        OR sender IN (${placeholders})
+        OR (is_broadcast = 1 AND (recipient = 'ALL_CITIZENS' OR recipient LIKE 'CITIZENS_%'))
+        ${isDept ? "OR recipient = '+18005550199' OR recipient = 'civic.complaints@city.phonemail.gov'" : ""}
+      ) 
+      AND label = ? AND folder != 'trash'
+    `).get(...userIds, ...userIds, l);
+    labelCounts[l] = row ? row.count : 0;
   }
 
   // Grievance ticket count
   const ticketRow = isDept
     ? db.prepare(`SELECT COUNT(*) as count FROM grievance_tickets`).get()
-    : db.prepare(`SELECT COUNT(*) as count FROM grievance_tickets WHERE citizen_phone = ?`).get(normalized);
+    : db.prepare(`SELECT COUNT(*) as count FROM grievance_tickets WHERE citizen_phone IN (${placeholders})`).get(...userIds);
   counts['grievance'] = ticketRow ? ticketRow.count : 0;
 
   return { folders: counts, labels: labelCounts };
