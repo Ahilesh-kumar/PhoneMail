@@ -508,6 +508,10 @@ export function createEmail({
 }) {
   const attachmentsJson = typeof attachments === 'string' ? attachments : JSON.stringify(attachments);
   const hasAtt = attachments.length > 0 ? 1 : has_attachments;
+  const isoNow = new Date().toISOString();
+  const finalTimestamp = timestamp
+    ? (timestamp.includes('Z') || timestamp.includes('+') ? timestamp : (timestamp.replace(' ', 'T') + 'Z'))
+    : isoNow;
 
   const stmt = db.prepare(`
     INSERT INTO emails (
@@ -525,7 +529,7 @@ export function createEmail({
       ?, ?, ?, ?,
       ?, ?,
       ?, ?, ?, ?,
-      COALESCE(?, CURRENT_TIMESTAMP)
+      ?
     )
   `);
 
@@ -539,19 +543,29 @@ export function createEmail({
     ticket_id,
     ticket_status,
     is_broadcast ? 1 : 0,
-    timestamp
+    finalTimestamp
   );
 
   return getEmailById(result.lastInsertRowid);
 }
 
+export function formatEmailRow(row) {
+  if (!row) return null;
+  let ts = row.timestamp;
+  if (ts && typeof ts === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(ts.trim())) {
+    ts = ts.trim().replace(' ', 'T') + 'Z';
+  }
+  return {
+    ...row,
+    timestamp: ts,
+    attachments: JSON.parse(row.attachments_json || '[]')
+  };
+}
+
 export function getEmailById(id) {
   const row = db.prepare('SELECT * FROM emails WHERE id = ?').get(id);
   if (!row) return null;
-  return {
-    ...row,
-    attachments: JSON.parse(row.attachments_json || '[]')
-  };
+  return formatEmailRow(row);
 }
 
 export function getEmailsForUser(userIdentifier, options = {}) {
@@ -613,10 +627,7 @@ export function getEmailsForUser(userIdentifier, options = {}) {
   query += ` ORDER BY is_broadcast DESC, timestamp DESC`;
 
   const rows = db.prepare(query).all(...params);
-  return rows.map(r => ({
-    ...r,
-    attachments: JSON.parse(r.attachments_json || '[]')
-  }));
+  return rows.map(r => formatEmailRow(r));
 }
 
 export function getConversationThread(userA, userB) {
@@ -639,10 +650,7 @@ export function getConversationThread(userA, userB) {
     normB, emailB, normA, emailA
   );
 
-  return rows.map(r => ({
-    ...r,
-    attachments: JSON.parse(r.attachments_json || '[]')
-  }));
+  return rows.map(r => formatEmailRow(r));
 }
 
 export function markEmailRead(id, isRead = 1) {
@@ -766,10 +774,7 @@ export function getLatestTicketForCitizen(citizenPhone) {
 
 export function getMessagesByTicketId(ticketId) {
   const rows = db.prepare('SELECT * FROM emails WHERE ticket_id = ? ORDER BY timestamp ASC').all(ticketId);
-  return rows.map(r => ({
-    ...r,
-    attachments: JSON.parse(r.attachments_json || '[]')
-  }));
+  return rows.map(r => formatEmailRow(r));
 }
 
 // -------------------------------------------------------------
@@ -901,10 +906,7 @@ export function getRobocallStats() {
 
 export function getAllGovtReceipts() {
   const emails = db.prepare("SELECT * FROM emails WHERE label = 'Govt Receipts' OR is_gov_verified = 1 ORDER BY timestamp DESC").all();
-  return emails.map(e => ({
-    ...e,
-    attachments: JSON.parse(e.attachments_json || '[]')
-  }));
+  return emails.map(e => formatEmailRow(e));
 }
 
 export function verifyReceiptSeal({ seal_id, sha256 = null, ticket_id = null, beneficiary_phone = null, raw_payload = null }) {

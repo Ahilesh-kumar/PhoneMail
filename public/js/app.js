@@ -126,6 +126,16 @@ async function checkAuthSession() {
 
 function openAuthModal(defaultPortal = 'citizen') {
   const modal = document.getElementById('auth-modal');
+  const closeBtn = document.getElementById('auth-modal-close-btn');
+  if (closeBtn) {
+    if (state.currentUser) {
+      closeBtn.classList.remove('hidden');
+      closeBtn.style.display = 'block';
+    } else {
+      closeBtn.classList.add('hidden');
+      closeBtn.style.display = 'none';
+    }
+  }
   if (modal) {
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
@@ -134,6 +144,13 @@ function openAuthModal(defaultPortal = 'citizen') {
 }
 
 function closeAuthModal() {
+  if (!state.currentUser) {
+    const feedback = document.getElementById('auth-feedback') || document.getElementById('official-auth-feedback');
+    if (feedback) {
+      feedback.innerHTML = '<span class="text-amber-400 font-semibold">Authentication required. Please sign in or launch an Instant Demo Persona.</span>';
+    }
+    return;
+  }
   const modal = document.getElementById('auth-modal');
   if (modal) {
     modal.classList.add('hidden');
@@ -222,7 +239,6 @@ function switchOfficialMode(mode) {
 }
 
 async function quickDemoLogin(phone) {
-  closeAuthModal();
   await quickSwitchUser(phone);
 }
 
@@ -2241,7 +2257,7 @@ Issuing Authority  : ${email?.sender_name || 'Government Administration'} (${ema
 Beneficiary Phone  : ${email?.recipient || state.currentUser?.phone_number || '+19876543210'}
 Document ID/Docket : ${email?.ticket_id || att.receipt_number || 'DOC-2026-0091'}
 Seal ID            : ${att.seal_id || 'SEAL-88910-SHA256'}
-Date of Issue      : ${new Date(email?.timestamp || Date.now()).toLocaleString()}
+Date of Issue      : ${parseUtcTimestamp(email?.timestamp || Date.now()).toLocaleString()}
 Status             : CRYPTOGRAPHICALLY VERIFIED & TAMPER-EVIDENT (100% AUTHENTIC)
 --------------------------------------------------------------------------------
 SHA-256 Hash Seal  : ${att.sha256 || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'}
@@ -2762,19 +2778,34 @@ function setupEventListeners() {
 // FORMATTING HELPERS
 // =============================================================
 
+function parseUtcTimestamp(timestamp) {
+  if (!timestamp) return new Date();
+  if (timestamp instanceof Date) return timestamp;
+  if (typeof timestamp === 'number') return new Date(timestamp);
+  let str = String(timestamp).trim();
+  // SQLite CURRENT_TIMESTAMP returns "YYYY-MM-DD HH:MM:SS" (in UTC without Z) or without offset
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(str)) {
+    str = str.replace(' ', 'T') + 'Z';
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? new Date(timestamp) : d;
+}
+
 function formatDisplayTime(timestamp, detailed = false) {
   if (!timestamp) return '';
-  const date = new Date(timestamp);
+  const date = parseUtcTimestamp(timestamp);
   if (isNaN(date.getTime())) return timestamp;
-
-  if (detailed) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
 
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  if (detailed) {
+    return isToday ? timeStr : `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
+  }
+
   if (isToday) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return timeStr;
   }
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }

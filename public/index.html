@@ -853,11 +853,12 @@
   <div id="auth-modal" style="position: fixed; inset: 0; z-index: 9999; background: rgba(7, 11, 20, 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: none; align-items: center; justify-content: center; padding: 1.25rem; overflow-y: auto;" class="hidden">
     <div style="background-color: #111827; max-width: 56rem; width: 100%; border: 1px solid #334155; border-radius: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); overflow: hidden; position: relative; margin: auto;" class="flex flex-col md:flex-row text-white">
       
-      <!-- Close button on modal (top right on mobile & desktop) -->
+      <!-- Close button on modal (top right on mobile & desktop - hidden when unauthenticated) -->
       <button 
         type="button" 
+        id="auth-modal-close-btn"
         onclick="closeAuthModal()" 
-        class="absolute top-4 right-4 z-20 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 transition-all cursor-pointer"
+        class="absolute top-4 right-4 z-20 text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 transition-all cursor-pointer hidden"
         title="Dismiss / Return to Mailbox">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -1108,6 +1109,17 @@
               </div>
 
               <div id="auth-feedback" class="text-xs min-h-[16px] text-center"></div>
+
+              <!-- 1-Click Fast-Track Demo Entry -->
+              <div class="pt-2 border-t border-slate-800/80">
+                <button 
+                  type="button" 
+                  onclick="quickDemoLogin('+19876543210')" 
+                  class="w-full py-2.5 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700/80 hover:border-blue-500/50 text-slate-300 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition-all">
+                  <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Quick Demo: Open as Elena Rostova (Citizen)</span>
+                </button>
+              </div>
             </div>
 
           </div>
